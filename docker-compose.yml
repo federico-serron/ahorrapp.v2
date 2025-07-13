@@ -12,7 +12,7 @@ services:
     ports:
       - "5100:5100"
     volumes:
-      - ./instance:/app/backend/app/instance  # Para que se persista la DB en local
+      - ./instance:/app/backend/app/instance
     networks:
       - app-network
     depends_on:
