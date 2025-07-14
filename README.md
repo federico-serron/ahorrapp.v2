@@ -51,7 +51,7 @@ cd tu-repo
 
    ```bash
    cd backend/
-   python -m run.app
+   python -m app.run
    ```
 
    El backend estará disponible en: [http://localhost:5100](http://localhost:5100)
