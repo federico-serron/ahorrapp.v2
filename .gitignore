@@ -22,6 +22,8 @@ frontend/.parcel-cache/
 frontend/.env
 frontend/tsconfig.json
 
+!frontend/.env.example
+
 # === LOGS ===
 *.log
 npm-debug.log*
