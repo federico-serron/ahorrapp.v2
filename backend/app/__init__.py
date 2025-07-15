@@ -16,7 +16,10 @@ jwt = JWTManager()
 migrate = Migrate()
 
 def create_app():
-
+    
+    """
+    We define static_folder because Flask is going to serve the front end files(Only in PRODUCTION!) since we are running everything from a single Dockerfile in production
+    """
     app = Flask(__name__, static_folder="front/build", static_url_path="/")
 
     # Configuración básica
