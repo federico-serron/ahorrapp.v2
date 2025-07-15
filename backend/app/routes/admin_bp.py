@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonif
+from flask import Blueprint, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from app import db, bcrypt
 from app.models import User

@@ -6,7 +6,9 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flask_migrate import Migrate
 from dotenv import load_dotenv
+from app.config import DevelopmentConfig, ProductionConfig, TestingConfig
 
+load_dotenv()
 # Instancias que se inicializan más adelante
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -14,13 +16,18 @@ jwt = JWTManager()
 migrate = Migrate()
 
 def create_app():
-    load_dotenv()
 
     app = Flask(__name__, static_folder="front/build", static_url_path="/")
 
     # Configuración básica
-    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+    enviroment = os.getenv("FLASK_ENV", "production")
+    if enviroment == "development":
+        app.config.from_object(DevelopmentConfig)
+    elif enviroment == "testing":
+        app.config.from_object(TestingConfig)
+    else:
+        app.config.from_object(ProductionConfig)
+        
 
     # Extensiones
     CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
