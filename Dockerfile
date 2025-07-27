@@ -23,6 +23,9 @@ COPY backend/ ./backend/
 # Copiar el build del frontend al lugar donde Flask lo sirve
 COPY --from=frontend-builder /app/dist ./backend/app/front/build
 
+ENV FLASK_APP=app/run.py
+
 EXPOSE 5100
 
-CMD ["gunicorn", "--chdir", "backend", "app.run:app", "--bind", "0.0.0.0:5100", "--workers", "4", "--worker-class", "gevent"]
+#CMD ["gunicorn", "--chdir", "backend", "app.run:app", "--bind", "0.0.0.0:5100", "--workers", "4", "--worker-class", "gevent"]
+CMD bash -c "cd backend && flask db upgrade && gunicorn app.run:app --bind 0.0.0.0:5100 --workers 4 --worker-class gevent"
