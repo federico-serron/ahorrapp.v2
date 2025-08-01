@@ -1,0 +1,14 @@
+# Ignore virtual environment    
+backend/venv
+
+# Ignore env variabls
+backend/.env
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+*.log
+node_modules
