@@ -20,7 +20,8 @@ def create_app():
     """
     We define static_folder because Flask is going to serve the front end files(Only in PRODUCTION!) since we are running everything from a single Dockerfile in production
     """
-    app = Flask(__name__, static_folder="front/build", static_url_path="/")
+    static_file_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'front/build')
+    app = Flask(__name__, static_folder=static_file_dir)
 
     # Configuración básica
     enviroment = os.getenv("FLASK_ENV", "production")

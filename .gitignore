@@ -9,9 +9,9 @@ instance/
 .env
 .env.*
 backend/.env
-backend/.env.prod
 
-!backend/.env.example
+!backend/.env.dev
+!backend/.env.prod
 
 
 # === NODE / VITE / REACT ===
