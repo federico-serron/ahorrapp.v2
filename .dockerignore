@@ -1,14 +1,19 @@
-# Ignore virtual environment    
-backend/venv
+# Ignorar virtual env
+backend/venv/
 
-# Ignore env variabls
+# Ignorar archivos .env generales
+*.env
+.env
+.env.*
 backend/.env
 
+# Incluid .env del front
+!frontend/.env.prod
+
+# Otros archivos comunes a ignorar
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.env
-.env.*
 *.log
-node_modules
+node_modules/
