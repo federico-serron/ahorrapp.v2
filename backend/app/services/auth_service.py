@@ -6,6 +6,19 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 
 
 def create_user_service(**kwargs):
+    """
+    Creates a new user in the database.
+
+    Receives:
+        **kwargs: Dictionary with required user fields ('email', 'password').
+
+    Returns:
+        dict -> The serialized newly created user.
+
+    Raises:
+        BadRequestError: If required fields are missing.
+        ConflictError: If the email already exists in the database.
+    """
     
     required_fields = ['email', 'password']
     missing_fields = [field for field in required_fields if kwargs.get(field) in [None, ""]]
@@ -31,6 +44,21 @@ def create_user_service(**kwargs):
 
 
 def login_user_service(email, password):
+    """
+    Authenticates a user and generates a JWT access token if the credentials are correct.
+
+    Receives:
+        email (str): The user's email.
+        password (str): The user's password.
+
+    Returns:
+        str -> A JWT access token valid for 1 day.
+
+    Raises:
+        BadRequestError: If email or password are missing.
+        NotFoundError: If no user exists with the provided email.
+        ConflictError: If the password is incorrect.
+    """
     
     if not email or not password:
         raise BadRequestError("Email and password are required.")
@@ -53,6 +81,20 @@ def login_user_service(email, password):
         raise ConflictError("Incorrect username and/or password.")
     
 def edit_user_service(user_id, **kwargs):
+    """
+    Edits the data of an existing user.
+
+    Receives:
+        user_id (int): ID of the user to edit.
+        **kwargs: Fields to update (currently only 'password' is editable).
+
+    Returns:
+        dict -> The serialized user after editing.
+
+    Raises:
+        NotFoundError: If the user does not exist.
+        BadRequestError: If trying to edit a non-editable field.
+    """
     
     user = User.query.filter_by(id=user_id).first()
     if not user:
