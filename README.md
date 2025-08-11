@@ -39,6 +39,7 @@ Asegúrate de tener los archivos `.env` necesarios en cada carpeta (`backend` y 
   FLASK_APP=app/run.py
   FLASK_ENV=development
   SECRET_KEY=your-secret-key-here
+  JWT_SECRET_KEY=secret_key
   DATABASE_URL=sqlite:///app.db
   ```
 - Para usar PostgreSQL (recomendado para producción):
@@ -46,6 +47,7 @@ Asegúrate de tener los archivos `.env` necesarios en cada carpeta (`backend` y 
   FLASK_APP=app/run.py
   FLASK_ENV=production
   SECRET_KEY=your-secret-key-here
+  JWT_SECRET_KEY=secret_key
   DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/mydatabase
   ```
   Cambia `usuario`, `contraseña` y `mydatabase` por los datos de tu base de datos.
