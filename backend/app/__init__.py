@@ -40,18 +40,6 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db, compare_type=True)
 
-    # Solo crear la base de datos si es SQLite
-    db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
-    if db_url.startswith('sqlite'):
-
-        sqlite_path = db_url.replace('sqlite:///', '')
-        sqlite_dir = os.path.dirname(sqlite_path)
-        if sqlite_dir and not os.path.exists(sqlite_dir):
-            os.makedirs(sqlite_dir)
-        
-        with app.app_context():
-            db.create_all()
-
     # Registramos blueprints
     from app.routes.admin_bp import admin_bp
     from app.routes.public_bp import public_bp
