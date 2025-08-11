@@ -185,7 +185,7 @@ README.md
 
 ---
 
-## 🏁 Resumen rápido para levantar todo (como si tuvieras 10 años)
+## 🏁 Resumen rápido para levantar todo
 
 1. **Descarga el proyecto y entra a la carpeta**
 2. **Copia y edita los archivos `.env` en `backend/` y `frontend/` según lo que quieras usar (SQLite o PostgreSQL)**
