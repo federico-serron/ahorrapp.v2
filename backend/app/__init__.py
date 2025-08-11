@@ -43,12 +43,12 @@ def create_app():
     # Solo crear la base de datos si es SQLite
     db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
     if db_url.startswith('sqlite'):
-        # Asegurarse que la carpeta de la base exista
+
         sqlite_path = db_url.replace('sqlite:///', '')
         sqlite_dir = os.path.dirname(sqlite_path)
         if sqlite_dir and not os.path.exists(sqlite_dir):
             os.makedirs(sqlite_dir)
-        # Crear las tablas
+        
         with app.app_context():
             db.create_all()
 
