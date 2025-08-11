@@ -40,11 +40,17 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db, compare_type=True)
 
-    # Creamos carpeta de base de datos si no existe
-    db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance', 'mydatabase.db')
-    print(f"Ruta de la base de datos: {db_path}")
-    if not os.path.exists(os.path.dirname(db_path)):
-        os.makedirs(os.path.dirname(db_path))
+    # Solo crear la base de datos si es SQLite
+    db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    if db_url.startswith('sqlite'):
+        # Asegurarse que la carpeta de la base exista
+        sqlite_path = db_url.replace('sqlite:///', '')
+        sqlite_dir = os.path.dirname(sqlite_path)
+        if sqlite_dir and not os.path.exists(sqlite_dir):
+            os.makedirs(sqlite_dir)
+        # Crear las tablas
+        with app.app_context():
+            db.create_all()
 
     # Registramos blueprints
     from app.routes.admin_bp import admin_bp
