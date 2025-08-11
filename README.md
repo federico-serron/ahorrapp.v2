@@ -20,8 +20,8 @@ Este proyecto es una aplicación fullstack que utiliza Flask para el backend y R
 ## 📦 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/tu-repo.git
-cd tu-repo
+git clone https://github.com/federico-serron/fserron-fullstack-starter.git
+cd fserron-fullstack-starter
 ```
 
 ---
