@@ -89,7 +89,7 @@ VITE_BASENAME=/
    - Si quieres usar **SQLite** (por defecto), no necesitas instalar nada extra.
    - Si quieres usar **PostgreSQL**, primero debes instalar PostgreSQL en tu computadora y crear una base de datos vacía (por ejemplo, llamada `mydatabase`).
 
-5. Crear las tablas de la base de datos (importante!):
+5. Crear las tablas de la base de datos (importante si usas PostgreSQL!):
 
    - Entra a la carpeta backend (si aun no estas alli):
      ```bash
