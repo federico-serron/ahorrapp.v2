@@ -4,6 +4,7 @@ import Home from './views/Home';
 import injectContext from './js/store/appContext.jsx';
 import './index.css';
 import NotFound from './views/NotFound.jsx';
+import Homedos from './views/Homedos';
 
 const Layout = () => {
     const basename = import.meta.env.VITE_BASENAME || "";
@@ -12,6 +13,7 @@ const Layout = () => {
         <BrowserRouter basename={basename}>
             <Routes>
                 <Route exact path='/' element={<Home/>} />
+                <Route path='/homedos' element={<Homedos/>} />
                 <Route path='*' element={<NotFound/>} />
             </Routes>
         </BrowserRouter>
