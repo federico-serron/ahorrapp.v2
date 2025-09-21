@@ -8,7 +8,6 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from app.config import DevelopmentConfig, ProductionConfig, TestingConfig
 
-load_dotenv()
 # Instancias que se inicializan más adelante
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -17,6 +16,7 @@ migrate = Migrate()
 
 def create_app():
     
+    load_dotenv()
     """
     We define static_folder because Flask is going to serve the front end files(Only in PRODUCTION!) since we are running everything from a single Dockerfile in production
     """
@@ -24,13 +24,15 @@ def create_app():
     app = Flask(__name__, static_folder=static_file_dir)
 
     # Configuración básica
-    enviroment = os.getenv("FLASK_ENV", "production")
-    if enviroment == "development":
-        app.config.from_object(DevelopmentConfig)
+    enviroment = os.getenv("FLASK_ENV", "development")
+    if enviroment == "production":
+        env_file = "env.prod"
+        app.config.from_object(ProductionConfig)
     elif enviroment == "testing":
         app.config.from_object(TestingConfig)
     else:
-        app.config.from_object(ProductionConfig)
+        env_file = ".env.dev"
+        app.config.from_object(DevelopmentConfig)
         
 
     # Extensiones
@@ -40,12 +42,17 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db, compare_type=True)
 
+    # Creacion carpeta de DB si no existe y si se usa SQLite
+    db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance', 'mydatabase.db')
+    if not os.path.exists(os.path.dirname(db_path)):
+        os.makedirs(os.path.dirname(db_path))
+
+    #app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+        
     # Registramos blueprints
-    from app.routes.admin_bp import admin_bp
     from app.routes.public_bp import public_bp
     from app.routes.user_bp import user_bp
     
-    app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(public_bp, url_prefix='/public')
     app.register_blueprint(user_bp, url_prefix='/user')
 
