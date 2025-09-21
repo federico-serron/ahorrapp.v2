@@ -97,7 +97,7 @@ const HomeView = ({ onSignupClick }) => {
                 </div>
             </section>
             
-            <section className="bg-gray-50 dark:bg-gray-800 py-16">
+            <section className="bg-gray-50 dark:bg-gray-800 py-6">
                 <div className="px-4 mx-auto max-w-7xl lg:px-6">
                     <div className="max-w-4xl mx-auto text-center">
                         <h2 className="mb-6 text-3xl font-bold text-gray-900 md:text-4xl dark:text-white">
