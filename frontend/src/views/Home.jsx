@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 
 // Importar componentes
 import Navbar from '../components/Navbar';
@@ -30,13 +30,13 @@ const getInitialTheme = () => {
 };
 
 export default function Home() {
-  const [theme, setTheme] = React.useState(getInitialTheme);
-  const [view, setView] = React.useState('home');
-  const [isLoginOpen, setIsLoginOpen] = React.useState(false);
-  const [isSignupOpen, setIsSignupOpen] = React.useState(false);
+  const [theme, setTheme] = useState(getInitialTheme);
+  const [view, setView] = useState('home');
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isSignupOpen, setIsSignupOpen] = useState(false);
 
   // Efecto para manejar cambios en la preferencia de tema del sistema
-  React.useEffect(() => {
+  useEffect(() => {
     const handleSystemThemeChange = (e) => {
       // Solo actualizar si no hay un tema guardado en localStorage
       if (!localStorage.getItem('theme')) {
@@ -53,7 +53,7 @@ export default function Home() {
   }, []);
 
   // Aplicar el tema cuando cambie
-  React.useEffect(() => {
+  useEffect(() => {
     const root = window.document.documentElement;
     
     // Asegurarse de que solo hay una clase de tema a la vez

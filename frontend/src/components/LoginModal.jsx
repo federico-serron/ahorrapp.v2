@@ -20,6 +20,12 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
     return newErrors;
   };
 
+  const resetLoginModal = () => {
+    setEmail("")
+    setPassword("")
+    setErrors({})
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
@@ -29,6 +35,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
       if (resp){
         toast.success(store.message);
         onClose();
+        resetLoginModal();
       } else{
         toast.error(store.error);
         return;
