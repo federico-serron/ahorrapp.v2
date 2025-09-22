@@ -1,10 +1,14 @@
-import React from 'react';
-import { XIcon } from './Icons';
+import React, {useState, useContext} from 'react';
+import { XIcon } from './Icons'
+import { Context } from '../js/store/appContext';
+import toast from 'react-hot-toast';
+;
 
 const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [errors, setErrors] = React.useState({});
+  const { actions, store } = useContext(Context);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({});
 
   if (!isOpen) return null;
 
@@ -16,13 +20,19 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length === 0) {
-      console.log('Login submitted:', { email, password });
-      onClose();
+      const resp = await actions.login(email, password);
+      if (resp){
+        toast.success(store.message);
+        onClose();
+      } else{
+        toast.error(store.error);
+        return;
+      }
     }
   };
 

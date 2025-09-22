@@ -65,7 +65,7 @@ def login_user_service(email, password):
     
     user = User.query.filter_by(email=email).first()
     if not user:
-        raise NotFoundError(f"No user found with email {email}")
+        raise NotFoundError(f"Incorrect username and/or password.")
 
     password_from_db = user.password
     true_o_false = bcrypt.check_password_hash(password_from_db, password)

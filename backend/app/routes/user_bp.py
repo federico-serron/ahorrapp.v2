@@ -8,6 +8,21 @@ from app.blacklist import BLACKLIST
 
 user_bp = Blueprint('user', __name__)
 
+
+@user_bp.route('/me', methods=['GET'])
+@jwt_required(locations=["cookies"])
+def me():
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    
+    return jsonify({
+        "authenticated": True,
+        "user_id": user_id,
+        #"role": claims.get("role"),
+        "role": None
+    }), 200
+    
+
 @user_bp.route('/signup', methods=['POST'])
 def create_user():
     try:

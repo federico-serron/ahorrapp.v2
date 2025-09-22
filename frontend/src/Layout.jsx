@@ -1,8 +1,10 @@
 import React from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import Home from './views/Home';
 import injectContext from './js/store/appContext.jsx';
 import NotFound from './views/NotFound.jsx';
+
 import './index.css';
 
 const Layout = () => {
@@ -15,6 +17,7 @@ const Layout = () => {
                 <Route path='*' element={<NotFound/>} />
             </Routes>
         </BrowserRouter>
+        <Toaster />
     </div>
   )
 }
