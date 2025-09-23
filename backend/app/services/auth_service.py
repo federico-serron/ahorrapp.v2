@@ -20,12 +20,13 @@ def create_user_service(**kwargs):
         ConflictError: If the email already exists in the database.
     """
     
-    required_fields = ['email', 'password']
+    required_fields = ['name', 'email', 'password']
     missing_fields = [field for field in required_fields if kwargs.get(field) in [None, ""]]
     
     if missing_fields:
         raise BadRequestError(f"Missing required fields: {', '.join(missing_fields)}")
     
+    name = kwargs.get('name')
     email = kwargs.get('email')
     password = kwargs.get('password')
     
@@ -35,7 +36,7 @@ def create_user_service(**kwargs):
     
     password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
     
-    new_user = User(email=email, password=password_hash)
+    new_user = User(name=name, email=email, password=password_hash)
     
     db.session.add(new_user)
     db.session.commit()

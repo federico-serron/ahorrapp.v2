@@ -1,7 +1,11 @@
-import React from 'react';
+import React, {useState, useContext} from 'react';
 import { XIcon } from './Icons';
+import { Context } from '../js/store/appContext';
+import toast from 'react-hot-toast';
 
 const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
+  const { actions, store } = useContext(Context);
+
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -19,13 +23,19 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length === 0) {
-      console.log('Signup submitted:', { name, email, password });
-      onClose();
+      const resp = await actions.signup(name, email, password)
+      if (resp){
+        toast.success(store.message);
+        onClose();
+      }else{
+        toast.error(store.error);
+        return;
+      }
     }
   };
 

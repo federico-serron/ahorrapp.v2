@@ -67,11 +67,11 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 
 
-			signup: async (email, password) => {
+			signup: async (name, email, password) => {
 				const URLsignup = `${backendUrl}/user/signup`;
 				const store = getStore()
 
-				if (!email || !password) {
+				if (!name || !email || !password) {
 					setStore({ ...store, error: "Required information missing." })
 					return false;
 
@@ -79,6 +79,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 				try {
 					const userData = {
+						name: name,
 						email: email,
 						password: password
 					}
