@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt, set_access_cookies
 from app.models import User
 from app import bcrypt
 from app.services.auth_service import create_user_service, login_user_service, edit_user_service
@@ -48,7 +48,10 @@ def login():
         password = request.json.get('password')
         
         login_successfull_token = login_user_service(email, password)
-        return jsonify({"msg": "You have successfully logged in!", "access_token": login_successfull_token}), 200
+        resp = jsonify({"msg": "You have successfully logged in!", "access_token": login_successfull_token })
+        
+        set_access_cookies(resp, login_successfull_token)
+        return resp, 200
 
     except BadRequestError as e:
         return jsonify({'error': str(e)}), 400
