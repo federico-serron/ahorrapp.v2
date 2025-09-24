@@ -140,12 +140,21 @@ const getState = ({ getStore, getActions, setStore }) => {
 						throw new Error(data.error);
 					}
 
-					setStore({ ...store, message: data.msg })
-					await getActions().getCurrentUser()
+					setStore({
+						...store,
+						logged_user: data.user || email,
+						user_loaded: true,
+						message: data.msg || "Inicio de sesión exitoso"
+					});
 					return true
 
 				} catch (error) {
-					setStore({ ...store, error: error.message })
+					setStore({ 
+						...store, 
+						error: error.message,
+						logged_user: null,
+						user_loaded: true
+					});
 					console.error(store.error)
 					return false
 				}
