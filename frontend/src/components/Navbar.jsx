@@ -1,8 +1,14 @@
-import React from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import { SunIcon, MoonIcon } from './Icons';
+import { Context } from '../js/store/appContext';
+import { useAuth } from '../hooks/useAuth';
+
 
 const Navbar = ({ setView, onLoginClick, onSignupClick, theme, toggleTheme }) => {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  
+  const { actions, store } = useContext(Context);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const navLinks = [
     { name: 'Inicio', view: 'home' },
@@ -14,15 +20,22 @@ const Navbar = ({ setView, onLoginClick, onSignupClick, theme, toggleTheme }) =>
     <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md fixed w-full z-20 top-0 left-0 border-b border-gray-200 dark:border-gray-600">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
         <a href="#" onClick={() => setView('home')} className="flex items-center space-x-3">
-          <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">React/Flask Boilerplate</span>
+          <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">React & Flask ❤️ Fede Serron</span>
         </a>
         <div className="flex md:order-2 space-x-3 md:space-x-4 items-center">
-            <button onClick={onLoginClick} className="hidden md:block text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:focus:ring-gray-800 transition-colors">
-                Iniciar Sesión
+          {!isAuthenticated ? (
+                        <><button onClick={onLoginClick} className="hidden md:block text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:focus:ring-gray-800 transition-colors">
+              Iniciar Sesión
             </button>
             <button onClick={onSignupClick} className="hidden md:block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-colors">
                 Registrarse
-            </button>
+              </button></>
+          ) : (
+            <button onClick={actions.logout} className="hidden md:block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-colors">
+                Cerrar Sesión
+              </button>
+          )}
+
             <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                 {theme === 'dark' ? <SunIcon className="w-5 h-5 text-yellow-400" /> : <MoonIcon className="w-5 h-5 text-gray-700" />}
             </button>

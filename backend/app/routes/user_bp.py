@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt, set_access_cookies
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt, set_access_cookies, unset_jwt_cookies
 from app.models import User
 from app import bcrypt
 from app.services.auth_service import create_user_service, login_user_service, edit_user_service
@@ -48,7 +48,7 @@ def login():
         password = request.json.get('password')
         
         login_successfull_token = login_user_service(email, password)
-        resp = jsonify({"msg": "You have successfully logged in!", "access_token": login_successfull_token })
+        resp = jsonify({"msg": "You have successfully logged in!", "access_token": login_successfull_token, "user": email })
         
         set_access_cookies(resp, login_successfull_token)
         return resp, 200
@@ -107,9 +107,12 @@ def show_users():
 def logout():
     
     try:
-        jti = get_jwt()["jti"]
-        BLACKLIST.add(jti)
-        return jsonify({"msg": "Session ended"}), 200
+        #jti = get_jwt()["jti"]
+        #BLACKLIST.add(jti)
+        
+        resp = jsonify({"msg": "Session ended"})
+        unset_jwt_cookies(resp)
+        return resp, 200
         
     except Exception as e:
         return jsonify({"error": "For some reason we could not end your session!"}), 500
