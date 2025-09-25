@@ -189,6 +189,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				} catch (error) {
 					setStore({ ...store, error: error.message })
 					return false;
+					
 				}
 			},
 
