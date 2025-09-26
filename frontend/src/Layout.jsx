@@ -2,7 +2,7 @@ import React from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import Home from './views/Home';
-import Dashboard from './views/Dashboard';
+import Dashboard from './views/dashboard/Dashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import injectContext from './js/store/appContext.jsx';
 import NotFound from './views/NotFound.jsx';
@@ -23,7 +23,7 @@ const Layout = () => {
                     <Dashboard />
                   </ProtectedRoute>
                 } />
-                
+
                 <Route path='*' element={<NotFound/>} />
             </Routes>
         </BrowserRouter>
