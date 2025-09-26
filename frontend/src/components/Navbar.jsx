@@ -1,11 +1,9 @@
-import React, {useEffect, useState, useContext} from 'react';
-import { SunIcon, MoonIcon } from './Icons';
+import React, { useState, useContext } from 'react';
 import { Context } from '../js/store/appContext';
 import { useAuth } from '../hooks/useAuth';
+import ToggleTheme from './ToggleTheme';
 
-
-const Navbar = ({ setView, onLoginClick, onSignupClick, theme, toggleTheme }) => {
-  
+const Navbar = ({ setView, onLoginClick, onSignupClick }) => {
   const { actions, store } = useContext(Context);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated } = useAuth();
@@ -36,9 +34,7 @@ const Navbar = ({ setView, onLoginClick, onSignupClick, theme, toggleTheme }) =>
               </button>
           )}
 
-            <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                {theme === 'dark' ? <SunIcon className="w-5 h-5 text-yellow-400" /> : <MoonIcon className="w-5 h-5 text-gray-700" />}
-            </button>
+            <ToggleTheme className="ml-2" />
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} type="button" className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-sticky" aria-expanded={isMenuOpen}>
                 <span className="sr-only">Open main menu</span>
                 <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">

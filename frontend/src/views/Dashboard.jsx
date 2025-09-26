@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import ToggleTheme from '../components/ToggleTheme';
 import { FaHome, FaChartBar, FaUser, FaCog } from "react-icons/fa";
 
 const SunIcon = (props) => (
@@ -84,9 +85,7 @@ export default function Dashboard() {
         <h1 className="hidden md:block text-2xl font-semibold text-gray-800 dark:text-white">Dashboard</h1>
       </div>
       <div className="flex items-center space-x-4">
-        <button onClick={toggleDarkMode} className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none">
-          {isDarkMode ? <SunIcon className="w-6 h-6" /> : <MoonIcon className="w-6 h-6" />}
-        </button>
+        <ToggleTheme />
         <div className="relative">
           <img className="h-10 w-10 rounded-full object-cover" src="https://placehold.co/100x100/6366f1/white?text=U" alt="Tu Avatar"/>
         </div>

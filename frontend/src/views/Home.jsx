@@ -1,4 +1,5 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState } from 'react';
+import { useTheme } from '../components/ToggleTheme';
 
 // Importar componentes
 import Navbar from '../components/Navbar';
@@ -11,92 +12,31 @@ import HomeView from './HomeView';
 import PaymentMethodsView from './PaymentMethodsView';
 import ContactView from './ContactView';
 
-// Componente Principal: App
-// Función para obtener el tema inicial
-const getInitialTheme = () => {
-  // Verificar si estamos en el navegador
-  if (typeof window !== 'undefined') {
-    // Intentar obtener el tema guardado
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme;
-    }
-    // Usar la preferencia del sistema si no hay tema guardado
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return prefersDark ? 'dark' : 'light';
-  }
-  // Valor por defecto para renderizado del lado del servidor
-  return 'light';
-};
-
-export default function Home() {
-  const [theme, setTheme] = useState(getInitialTheme);
+const Home = () => {
   const [view, setView] = useState('home');
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
-
-  // Efecto para manejar cambios en la preferencia de tema del sistema
-  useEffect(() => {
-    const handleSystemThemeChange = (e) => {
-      // Solo actualizar si no hay un tema guardado en localStorage
-      if (!localStorage.getItem('theme')) {
-        setTheme(e.matches ? 'dark' : 'light');
-      }
-    };
-
-    // Configurar el listener para cambios en la preferencia del sistema
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    darkModeMediaQuery.addEventListener('change', handleSystemThemeChange);
-
-    // Limpiar el listener al desmontar
-    return () => darkModeMediaQuery.removeEventListener('change', handleSystemThemeChange);
-  }, []);
-
-  // Aplicar el tema cuando cambie
-  useEffect(() => {
-    const root = window.document.documentElement;
-    
-    // Asegurarse de que solo hay una clase de tema a la vez
-    root.classList.remove('light', 'dark');
-    
-    if (theme === 'dark') {
-      root.classList.add('dark');
-      root.style.colorScheme = 'dark';
-    } else {
-      root.classList.add('light');
-      root.style.colorScheme = 'light';
-    }
-    
-    // Guardar preferencia
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-  
-  const toggleTheme = () => {
-    setTheme(prevTheme => {
-      const newTheme = prevTheme === 'light' ? 'dark' : 'light';
-      return newTheme;
-    });
-  };
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const { theme } = useTheme();
 
   // Manejadores de eventos para los modales
   const handleLoginClick = () => {
-    setIsSignupOpen(false);
-    setIsLoginOpen(true);
+    setShowSignupModal(false);
+    setShowLoginModal(true);
   };
   
   const handleSignupClick = () => {
-    setIsLoginOpen(false);
-    setIsSignupOpen(true);
+    setShowLoginModal(false);
+    setShowSignupModal(true);
   };
   
   const handleSwitchToSignup = () => {
-    setIsLoginOpen(false);
-    setIsSignupOpen(true);
+    setShowLoginModal(false);
+    setShowSignupModal(true);
   };
 
   const handleSwitchToLogin = () => {
-    setIsSignupOpen(false);
-    setIsLoginOpen(true);
+    setShowSignupModal(false);
+    setShowLoginModal(true);
   };
 
   // Renderizar la vista actual
@@ -114,14 +54,12 @@ export default function Home() {
   };
 
   return (
-    <div className={`flex flex-col min-h-screen ${theme === 'dark' ? 'dark' : ''} bg-white dark:bg-gray-900`}>
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       {/* Barra de navegación */}
       <Navbar 
-        setView={setView}
-        onLoginClick={handleLoginClick}
-        onSignupClick={handleSignupClick}
-        theme={theme}
-        toggleTheme={toggleTheme}
+        setView={setView} 
+        onLoginClick={() => setShowLoginModal(true)}
+        onSignupClick={() => setShowSignupModal(true)}
       />
       
       {/* Contenido principal */}
@@ -134,16 +72,18 @@ export default function Home() {
       
       {/* Modales */}
       <LoginModal 
-        isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
         onSwitchToSignup={handleSwitchToSignup}
       />
       
       <SignupModal 
-        isOpen={isSignupOpen}
-        onClose={() => setIsSignupOpen(false)}
+        isOpen={showSignupModal}
+        onClose={() => setShowSignupModal(false)}
         onSwitchToLogin={handleSwitchToLogin}
       />
     </div>
   );
-}
+};
+
+export default Home;
