@@ -10,11 +10,8 @@ import ActivitiesList from '../../components/dashboard/ActivitiesList';
 
 // --- Componente Principal del Dashboard ---
 export default function Dashboard() {
-  // Estado para el modo oscuro
   // Estado para el menú lateral en móviles
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

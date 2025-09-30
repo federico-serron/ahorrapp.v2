@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { FaHome, FaChartBar, FaUser, FaCog } from "react-icons/fa";
 
 
@@ -7,7 +8,7 @@ const Sidebar = ({isSidebarOpen}) => {
 
         <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-100 dark:bg-gray-900 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out md:relative md:translate-x-0`}>
           <div className="flex items-center justify-center p-6 border-b border-gray-200 dark:border-gray-800">
-            <span className="text-2xl font-bold text-gray-800 dark:text-white">Mi App</span>
+            <span className="text-2xl font-bold text-gray-800 dark:text-white"><Link to={"/"}>Mi App</Link></span>
           </div>
           <nav className="p-4">
             <a href="#" className="flex items-center px-4 py-2 text-gray-700 bg-gray-200 dark:bg-gray-800 dark:text-gray-200 rounded-lg">
