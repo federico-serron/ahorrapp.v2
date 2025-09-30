@@ -11,24 +11,10 @@ import ActivitiesList from '../../components/dashboard/ActivitiesList';
 // --- Componente Principal del Dashboard ---
 export default function Dashboard() {
   // Estado para el modo oscuro
-  const [isDarkMode, setIsDarkMode] = useState(false);
   // Estado para el menú lateral en móviles
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // useEffect para manejar el tema oscuro
-  useEffect(() => {
-    const isDark = localStorage.getItem('theme') === 'dark';
-    setIsDarkMode(isDark);
-  }, []);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkMode);
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
