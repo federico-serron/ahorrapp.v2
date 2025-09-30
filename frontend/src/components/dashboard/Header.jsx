@@ -11,7 +11,7 @@ const Header = ({ toggleSidebar }) => {
         </svg>
     );
     return (
-        <header className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <header className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <div>
                 <button className="text-gray-500 dark:text-gray-400 focus:outline-none md:hidden" onClick={toggleSidebar}>
                     <MenuIcon className="w-6 h-6" />

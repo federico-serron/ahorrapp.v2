@@ -2,7 +2,7 @@ import React from 'react'
 
 const CakeChart = () => {
     return (
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="p-6 bg-gray-50 dark:bg-gray-800 rounded-lg shadow">
             <h3 className="text-lg font-semibold mb-4">Distribución de Usuarios</h3>
             {/* Placeholder para un gráfico circular */}
             <div className="h-64 flex justify-center items-center">
