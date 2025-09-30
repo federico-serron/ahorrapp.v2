@@ -17,12 +17,16 @@ const Layout = () => {
             <Routes>
                 <Route exact path='/' element={<Home/>} />
                 
-                {/* Dashboard */}
+                {/* Proteced Dashboard */}
                 <Route path='/dashboard' element={
                   <ProtectedRoute>
                     <Dashboard />
                   </ProtectedRoute>
-                } />
+                }>
+                  <Route path='analitics' element={<Dashboard />} />
+                  <Route path='users' element={<Dashboard />} />
+                  <Route path='settings' element={<Dashboard />} />
+                </Route>
 
                 <Route path='*' element={<NotFound/>} />
             </Routes>

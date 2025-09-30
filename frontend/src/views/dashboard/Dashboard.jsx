@@ -1,6 +1,9 @@
 import React, {useState, useEffect} from 'react';
+import { Outlet } from 'react-router-dom';
 import ToggleTheme from '../../components/ToggleTheme';
 import { FaHome, FaChartBar, FaUser, FaCog } from "react-icons/fa";
+import Sidebar from '../../components/dashboard/Sidebar';
+import Header from '../../components/dashboard/Header';
 
 const MenuIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -38,48 +41,9 @@ export default function Dashboard() {
   
   // --- Sub-componentes para mejorar la legibilidad ---
 
-  const Sidebar = () => (
-    <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-100 dark:bg-gray-900 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out md:relative md:translate-x-0`}>
-      <div className="flex items-center justify-center p-6 border-b border-gray-200 dark:border-gray-800">
-        <span className="text-2xl font-bold text-gray-800 dark:text-white">Mi App</span>
-      </div>
-      <nav className="p-4">
-        <a href="#" className="flex items-center px-4 py-2 text-gray-700 bg-gray-200 dark:bg-gray-800 dark:text-gray-200 rounded-lg">
-          <FaHome className="w-5 h-5" />
-          <span className="ml-3">Dashboard</span>
-        </a>
-        <a href="#" className="flex items-center px-4 py-2 mt-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg">
-          <FaChartBar className="w-5 h-5" />
-          <span className="ml-3">Analíticas</span>
-        </a>
-        <a href="#" className="flex items-center px-4 py-2 mt-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg">
-          <FaUser className="w-5 h-5" />
-          <span className="ml-3">Usuarios</span>
-        </a>
-        <a href="#" className="flex items-center px-4 py-2 mt-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg">
-          <FaCog className="w-5 h-5" />
-          <span className="ml-3">Configuración</span>
-        </a>
-      </nav>
-    </aside>
-  );
 
-  const Header = () => (
-    <header className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-      <div>
-        <button className="text-gray-500 dark:text-gray-400 focus:outline-none md:hidden" onClick={toggleSidebar}>
-          <MenuIcon className="w-6 h-6" />
-        </button>
-        <h1 className="hidden md:block text-2xl font-semibold text-gray-800 dark:text-white">Dashboard</h1>
-      </div>
-      <div className="flex items-center space-x-4">
-        <ToggleTheme />
-        <div className="relative">
-          <img className="h-10 w-10 rounded-full object-cover" src="https://placehold.co/100x100/6366f1/white?text=U" alt="Tu Avatar"/>
-        </div>
-      </div>
-    </header>
-  );
+
+
 
   const StatCard = ({ title, value, icon }) => (
     <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -98,9 +62,9 @@ export default function Dashboard() {
   // -- RENDER PRINCIPAL --
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans">
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <Header toggleSidebar={toggleSidebar} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-950 p-6">
           {/* Sección de Tarjetas de Estadísticas */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -167,6 +131,7 @@ export default function Dashboard() {
                 </table>
              </div>
           </div>
+          <Outlet/>
         </main>
       </div>
     </div>
