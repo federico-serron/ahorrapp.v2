@@ -34,10 +34,6 @@ export default function Dashboard() {
   
   // --- Sub-componentes para mejorar la legibilidad ---
 
-
-
-
-
   const StatCard = ({ title, value, icon }) => (
     <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
       <div className="flex items-start justify-between">
