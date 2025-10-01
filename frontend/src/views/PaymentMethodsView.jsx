@@ -3,7 +3,7 @@ import { PAYMENT_METHODS, getEnabledPaymentMethods } from '../config/paymentMeth
 
 // Carga perezosa de los componentes de pago
 const loadPaymentComponent = (componentName) => {
-  return lazy(() => import(`../components/payments/PaymentMethods/${componentName}`));
+  return lazy(() => import(`../components/payments/PaymentMethods/${componentName}/index.jsx`));
 };
 
 const PaymentMethodsView = () => {

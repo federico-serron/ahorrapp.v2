@@ -8,9 +8,8 @@ import BarChart from '../../components/dashboard/BarChart';
 import CakeChart from '../../components/dashboard/CakeChart';
 import ActivitiesList from '../../components/dashboard/ActivitiesList';
 
-// --- Componente Principal del Dashboard ---
 export default function Dashboard() {
-  // Estado para el menú lateral en móviles
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -18,7 +17,6 @@ export default function Dashboard() {
   };
 
 
-  // -- RENDER PRINCIPAL --
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans">
       <Sidebar isSidebarOpen={isSidebarOpen} />
