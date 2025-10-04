@@ -17,7 +17,7 @@ const Layout = () => {
             <Routes>
                 <Route exact path='/' element={<Home/>} />
                 
-                {/* Proteced Dashboard */}
+                {/* Protected Dashboard */}
                 <Route path='/dashboard' element={
                   <ProtectedRoute>
                     <Dashboard />
