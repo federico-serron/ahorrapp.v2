@@ -9,10 +9,15 @@ paypal_bp = Blueprint('paypal', __name__)
 
 @paypal_bp.route('/create-order', methods=['POST'])
 def create_order():
-    data = request.get_json()
-    amount = data.get('amount', "10.00")
-    access_token = get_access_token()
     
-    response = create_order_service(amount, access_token)
+    try:
+        data = request.get_json()
+        amount = data.get('amount', "10.00")
+        access_token = get_access_token()
     
-    return jsonify(response), 200
+        response = create_order_service(amount, access_token)
+    
+        return jsonify(response.json()), response.status_code
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

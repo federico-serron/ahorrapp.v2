@@ -9,7 +9,8 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 PAYPAL_CLIENT_ID = current_app.config['PAYPAL_CLIENT_ID']
 PAYPAL_SECRET = current_app.config['PAYPAL_SECRET']
 PAYPAL_API_BASE = current_app.config['PAYPAL_API_BASE']
-
+PAYPAL_RETURN_URL = current_app.config['PAYPAL_RETURN_URL']
+PAYPAL_CANCEL_URL = current_app.config['PAYPAL_CANCEL_URL']
 
 def get_access_token():
         
@@ -37,8 +38,16 @@ def create_order_service(amount, access_token):
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {access_token}"
             },
-            body={
+            json={
                 "intent": "CAPTURE",
-                "purchase_units": [{"amount": {"value": f"{amount:.2f}", "currency_code": "USD"}}]
+                "purchase_units": [{"amount": {"value": f"{amount:.2f}", "currency_code": "USD"}}],
+                "application_context": {
+                    "return_url": PAYPAL_RETURN_URL,
+                    "cancel_url": PAYPAL_CANCEL_URL,
+                },
             }
         )
+        
+        return response
+        
+        
