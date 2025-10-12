@@ -25,3 +25,20 @@ def get_access_token():
     
     return response.json()["access_token"]
     
+
+def create_order_service(amount, access_token):
+    
+    if int(amount) <= 0 or not access_token:
+        raise BadRequestError("Invalid amount or access token")
+    else:
+        response = requests.post(
+            f"{PAYPAL_API_BASE}/v2/checkout/orders",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            },
+            body={
+                "intent": "CAPTURE",
+                "purchase_units": [{"amount": {"value": f"{amount:.2f}", "currency_code": "USD"}}]
+            }
+        )
