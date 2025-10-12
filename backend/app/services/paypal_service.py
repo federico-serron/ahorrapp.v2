@@ -51,3 +51,27 @@ def create_order_service(amount, access_token):
         return response
         
         
+def capture_order_service(order_id, access_token):
+    if not order_id or not access_token:
+        raise BadRequestError("Missing required information.")
+    else:
+        response = requests.post(
+            f"{PAYPAL_API_BASE}/v2/checkout/orders/{order_id}/capture",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            }
+        )
+        
+        data = response.json()
+        
+        """
+        if data.get("status") == "COMPLETED" and user_id:
+            user = User.query.filter_by(id=user_id).first()
+            if not user:
+                raise NotFoundError("User not found.")
+            user.is_premium == True
+            db.session.commit()
+        """
+            
+        return response
