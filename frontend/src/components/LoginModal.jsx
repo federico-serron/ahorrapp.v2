@@ -2,7 +2,6 @@ import React, {useState, useContext} from 'react';
 import { XIcon } from './Icons'
 import { Context } from '../js/store/appContext';
 import toast from 'react-hot-toast';
-;
 
 const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
   const { actions, store } = useContext(Context);

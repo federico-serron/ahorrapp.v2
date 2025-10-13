@@ -1,7 +1,7 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { PAYMENT_METHODS, getEnabledPaymentMethods } from '../config/paymentMethods';
 
-// Carga perezosa de los componentes de pago
+
 const loadPaymentComponent = (componentName) => {
   return lazy(() => import(`../components/payments/PaymentMethods/${componentName}/index.jsx`));
 };
