@@ -4,15 +4,23 @@ from app.models import User
 from app.exceptions import NotFoundError, UnauthorizedError, BadRequestError, ConflictError
 from datetime import timedelta
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+import requests
 
-
-PAYPAL_CLIENT_ID = current_app.config['PAYPAL_CLIENT_ID']
-PAYPAL_SECRET = current_app.config['PAYPAL_SECRET']
-PAYPAL_API_BASE = current_app.config['PAYPAL_API_BASE']
-PAYPAL_RETURN_URL = current_app.config['PAYPAL_RETURN_URL']
-PAYPAL_CANCEL_URL = current_app.config['PAYPAL_CANCEL_URL']
+def get_paypal_config():
+    return {
+        'client_id': current_app.config['PAYPAL_CLIENT_ID'],
+        'client_secret': current_app.config['PAYPAL_SECRET'],
+        'api_base': current_app.config['PAYPAL_API_BASE'],
+        'return_url': current_app.config['PAYPAL_RETURN_URL'],
+        'cancel_url': current_app.config['PAYPAL_CANCEL_URL']
+    }
+    
 
 def get_access_token():
+    config = get_paypal_config()
+    PAYPAL_API_BASE = config['api_base']
+    PAYPAL_CLIENT_ID = config['client_id']
+    PAYPAL_SECRET = config['client_secret']
         
     response = requests.post(
         f"{PAYPAL_API_BASE}/v1/oauth2/token",
@@ -29,7 +37,12 @@ def get_access_token():
 
 def create_order_service(amount, access_token):
     
-    if int(amount) <= 0 or not access_token:
+    config = get_paypal_config()
+    PAYPAL_API_BASE = config['api_base']
+    PAYPAL_RETURN_URL = config['return_url']
+    PAYPAL_CANCEL_URL = config['cancel_url']
+    
+    if not amount or not access_token:
         raise BadRequestError("Invalid amount or access token")
     else:
         response = requests.post(
@@ -40,7 +53,7 @@ def create_order_service(amount, access_token):
             },
             json={
                 "intent": "CAPTURE",
-                "purchase_units": [{"amount": {"value": f"{amount:.2f}", "currency_code": "USD"}}],
+                "purchase_units": [{"amount": {"value": f"{float(amount):.2f}", "currency_code": "USD"}}],
                 "application_context": {
                     "return_url": PAYPAL_RETURN_URL,
                     "cancel_url": PAYPAL_CANCEL_URL,
@@ -55,6 +68,9 @@ def capture_order_service(order_id, access_token):
     if not order_id or not access_token:
         raise BadRequestError("Missing required information.")
     else:
+        config = get_paypal_config()
+        PAYPAL_API_BASE = config['api_base']
+        
         response = requests.post(
             f"{PAYPAL_API_BASE}/v2/checkout/orders/{order_id}/capture",
             headers={

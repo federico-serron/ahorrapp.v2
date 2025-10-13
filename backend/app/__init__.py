@@ -52,7 +52,7 @@ def create_app():
     # Registramos blueprints
     from app.routes.public_bp import public_bp
     from app.routes.user_bp import user_bp
-    from app.routes.paypal_bp_bp import paypal_bp
+    from app.routes.paypal_bp import paypal_bp
     
     
     app.register_blueprint(public_bp, url_prefix='/public')

@@ -1,8 +1,6 @@
 import os
 from dotenv import load_dotenv
 
-from backend.app.services.paypal_service import PAYPAL_RETURN_URL
-
 load_dotenv()
 
 class Config:
