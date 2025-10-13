@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.services.paypal_service import get_access_token, create_order_service
+from app.services.paypal_service import get_access_token, create_order_service, capture_order_service
 from app.exceptions import NotFoundError, UnauthorizedError, ConflictError, BadRequestError
 from flask_jwt_extended import get_jwt_identity
 
