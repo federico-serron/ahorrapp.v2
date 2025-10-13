@@ -16,10 +16,11 @@ const PayPalPayment = ({
 
   const handlePayment = async (e) => {
     e.preventDefault()
-    const ammount = 10;
+    e.stopPropagation()
+    const amount = 10;
     try {
       setLoading(true);
-      const approvalUrl = await actions.createOrderPayPal(ammount);
+      const approvalUrl = await actions.createOrderPayPal(amount);
       if (approvalUrl) {
         window.location.href = approvalUrl;
       } else {

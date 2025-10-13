@@ -165,7 +165,36 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 
 			///////////////////////////////////////////////// PAYMENT METHODS /////////////////////////////////////////////////////////////////
-			
+
+			/////////////////// PAYPAL /////////////////////////
+			createOrderPayPal: async (amount) => {
+				const URLcreateOrder = `${backendUrl}/paypal/create-order`;
+				const store = getStore()
+
+				try {
+					const response = await fetch(URLcreateOrder, {
+						method: "POST",
+						body: JSON.stringify({ amount: amount }),
+						headers: {
+							"Content-type": "application/json; charset=UTF-8"
+						}
+					})
+
+					const data = await response.json()
+					const approvalUrl = data.links.find((link) => link.rel === "approve")?.href;
+
+					 if(approvalUrl){
+						return approvalUrl;
+					} else {
+						throw new Error(data.error);
+					}
+
+				} catch (error) {
+					setStore({ ...store, error: error.message })
+					console.error(store.error)
+					return false
+				}
+			},
 
 		}
 	};
