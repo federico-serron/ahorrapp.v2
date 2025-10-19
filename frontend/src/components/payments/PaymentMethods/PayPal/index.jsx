@@ -17,7 +17,9 @@ const PayPalPayment = ({
   const handlePayment = async (e) => {
     e.preventDefault()
     e.stopPropagation()
+
     const amount = 10;
+    
     try {
       setLoading(true);
       const approvalUrl = await actions.createOrderPayPal(amount);

@@ -120,8 +120,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 					return true
 
 				} catch (error) {
-					setStore({ 
-						...store, 
+					setStore({
+						...store,
 						error: error.message,
 						logged_user: null,
 						user_loaded: true
@@ -160,7 +160,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				} catch (error) {
 					setStore({ ...store, error: error.message })
 					return false;
-					
+
 				}
 			},
 
@@ -183,7 +183,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					const data = await response.json()
 					const approvalUrl = data.links.find((link) => link.rel === "approve")?.href;
 
-					 if(approvalUrl){
+					if (approvalUrl) {
 						return approvalUrl;
 					} else {
 						throw new Error(data.error);
@@ -192,6 +192,34 @@ const getState = ({ getStore, getActions, setStore }) => {
 				} catch (error) {
 					setStore({ ...store, error: error.message })
 					console.error(store.error)
+					return false
+				}
+			},
+
+			captureOrderPayPal: async (token) => {
+				const URLcaptureOrder = `${backendUrl}/paypal/capture-order`;
+				const store = getStore()
+
+				try {
+				const response = await fetch(URLcaptureOrder, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ order_id: token }),
+
+				});
+
+				const data = await response.json();
+
+				if (data.status === "COMPLETED") {
+					return data;
+				}else{
+					throw new Error(data.error);
+				}
+
+				} catch (error) {
+					setStore({ ...store, error: error.message })
 					return false
 				}
 			},
