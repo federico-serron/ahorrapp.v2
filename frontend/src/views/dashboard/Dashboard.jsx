@@ -21,8 +21,8 @@ export default function Dashboard() {
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans">
       <Sidebar isSidebarOpen={isSidebarOpen} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header toggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-950 p-6">
+        
+        <main className="flex-1 mt-20 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-950 p-6">
           
           {/* Sección de Tarjetas de Estadísticas */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

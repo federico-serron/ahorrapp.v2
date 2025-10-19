@@ -8,7 +8,7 @@ import injectContext from './js/store/appContext.jsx';
 import NotFound from './views/NotFound.jsx';
 import PayPalSuccess from './views/payment/paypal/Success';
 import PayPalCancel from './views/payment/paypal/Cancel';
-
+import Navbar from './components/Navbar';
 import './index.css';
 
 const Layout = () => {
@@ -16,6 +16,7 @@ const Layout = () => {
   return (
     <div>
       <BrowserRouter basename={basename}>
+      <Navbar/>
         <Routes>
           <Route exact path='/' element={<Home />} />
 
