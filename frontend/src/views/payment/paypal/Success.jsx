@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, ArrowPathIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { Context } from '../../../js/store/appContext';
 
 const PayPalSuccess = () => {
@@ -54,7 +54,7 @@ const PayPalSuccess = () => {
     <div className="min-h-screen pt-24 bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full mx-auto">
         <div className="text-center">
-          {status === "loading" ? <ArrowPathIcon className="mx-auto h-16 w-16 text-green-500" /> : status === "success" ? <CheckCircleIcon className="mx-auto h-16 w-16 text-green-500" /> : null}
+          {status === "loading" ? <ArrowPathIcon className="mx-auto h-16 w-16 text-green-500" /> : status === "success" ? <CheckCircleIcon className="mx-auto h-16 w-16 text-green-500" /> : status === "error" ? <XCircleIcon className="mx-auto h-16 w-16 text-red-500" /> : null}
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
             {status === "loading" ? "Processing payment...": message }
           </h2>
