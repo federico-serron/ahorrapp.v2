@@ -51,7 +51,7 @@ const PayPalSuccess = () => {
   };
 
   return (
-    <div className="min-h-screen mt-20 bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-24 bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full mx-auto">
         <div className="text-center">
           {status === "loading" ? <ArrowPathIcon className="mx-auto h-16 w-16 text-green-500" /> : status === "success" ? <CheckCircleIcon className="mx-auto h-16 w-16 text-green-500" /> : null}
