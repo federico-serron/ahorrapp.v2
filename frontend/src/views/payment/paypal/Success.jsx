@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useEffect, useContext, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Context } from '../../../js/store/appContext';
@@ -15,12 +15,17 @@ const PayPalSuccess = () => {
   const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("Procesando el pago...");
 
+  const executed = useRef(false);
+
   useEffect(() => {
     // Aquí podrías hacer una llamada a tu backend para confirmar el pago
     // usando paymentId, token y PayerID
     console.log('Payment successful:', { paymentId, token, PayerID });
 
-    const capturePayment = async () => {
+    const capturePayment = async (token) => {
+      if (executed.current) return;
+      executed.current = true;
+
       try {
 
         const response = await actions.captureOrderPayPal(token);
@@ -29,7 +34,7 @@ const PayPalSuccess = () => {
           setMessage("Pago confirmado exitosamente")
         } else {
           setStatus("error");
-          setMessage(store.error);
+          setMessage("Hubo un error");
         }
 
       } catch (error) {
@@ -38,8 +43,8 @@ const PayPalSuccess = () => {
       }
     }
 
-    capturePayment();
-  }, [paymentId, token, PayerID]);
+    capturePayment(token);
+  }, [token, paymentId, PayerID]);
 
   const handleReturnHome = () => {
     navigate('/');
@@ -51,13 +56,13 @@ const PayPalSuccess = () => {
         <div className="text-center">
           {status === "loading" ? <ArrowPathIcon className="mx-auto h-16 w-16 text-green-500" /> : status === "success" ? <CheckCircleIcon className="mx-auto h-16 w-16 text-green-500" /> : null}
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
-            {status === "loading" ? "Processing payment...": "¡Pago Exitoso!" }
+            {status === "loading" ? "Processing payment...": message }
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
             {message}
           </p>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-            ID de transacción: {paymentId}
+            ID de transacción: {token}
           </p>
           <div className="mt-8">
             <button
