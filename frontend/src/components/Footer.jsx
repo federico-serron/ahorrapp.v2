@@ -2,7 +2,7 @@ import React from 'react';
 import { LinkedinIcon } from './Icons';
 
 const Footer = () => (
-  <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+  <footer className="bg-blue-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
     <div className="mx-auto w-full max-w-screen-xl p-4 py-2 lg:py-8">
       <div className="sm:flex sm:items-center sm:justify-between">
         <span className="text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2024 <a href="#" className="hover:underline">React/Flask Boilerplate™</a>. Todos los derechos reservados.</span>
