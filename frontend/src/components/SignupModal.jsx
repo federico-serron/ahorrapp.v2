@@ -1,4 +1,4 @@
-import React, {useState, useContext} from 'react';
+import React, { useState, useContext } from 'react';
 import { XIcon } from './Icons';
 import { Context } from '../js/store/appContext';
 import toast from 'react-hot-toast';
@@ -12,6 +12,13 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const [errors, setErrors] = React.useState({});
 
   if (!isOpen) return null;
+
+  const resetSignupModal = () => {
+    setName("")
+    setEmail("")
+    setPassword("")
+    setErrors({})
+  }
 
   const validate = () => {
     const newErrors = {};
@@ -29,10 +36,10 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length === 0) {
       const resp = await actions.signup(name, email, password)
-      if (resp){
+      if (resp) {
         toast.success(store.message);
         onClose();
-      }else{
+      } else {
         toast.error(store.error);
         return;
       }
@@ -40,10 +47,16 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" onClick={() => {
+      onClose()
+      resetSignupModal()
+    }}>
       <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6 sm:p-8" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg p-1.5 transition-colors">
-             <XIcon className="w-5 h-5"/>
+        <button onClick={() => {
+          onClose()
+          resetSignupModal()
+        }} className="absolute top-3 right-3 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg p-1.5 transition-colors">
+          <XIcon className="w-5 h-5" />
         </button>
         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Crear una cuenta</h3>
         <form onSubmit={handleSubmit} className="space-y-6">
