@@ -14,6 +14,8 @@ class Config:
     JWT_COOKIE_SAMESITE = "Lax"
     JWT_COOKIE_CSRF_PROTECT = False
     
+    N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
+
     PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "client_id")
     PAYPAL_SECRET = os.getenv("PAYPAL_SECRET", "secret")
     PAYPAL_API_BASE = os.getenv("PAYPAL_API_BASE", "url_base")

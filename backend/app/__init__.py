@@ -53,10 +53,13 @@ def create_app():
     from app.routes.public_bp import public_bp
     from app.routes.user_bp import user_bp
     from app.routes.paypal_bp import paypal_bp
-    
-    
+    from app.routes.transaction_bp import transaction_bp
+    from app.routes.category_bp import category_bp
+
     app.register_blueprint(public_bp, url_prefix='/public')
     app.register_blueprint(user_bp, url_prefix='/user')
     app.register_blueprint(paypal_bp, url_prefix='/paypal')
+    app.register_blueprint(transaction_bp, url_prefix='/transaction')
+    app.register_blueprint(category_bp, url_prefix='/category')
 
     return app
