@@ -55,30 +55,8 @@ export default function Dashboard() {
     }
   };
 
-  // Estadísticas calculadas desde las transacciones reales
   const transactions = store.transactions || [];
-
-  const expenses = transactions
-    .filter((t) => t.amount < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-  const income = transactions
-    .filter((t) => t.amount > 0)
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const balance = income - expenses;
-
-  const topCategory = (() => {
-    if (transactions.length === 0) return '—';
-    const counts = transactions
-      .filter((t) => t.amount < 0 && t.category)
-      .reduce((acc, t) => {
-        acc[t.category] = (acc[t.category] || 0) + Math.abs(t.amount);
-        return acc;
-      }, {});
-    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-    return top ? top[0] : '—';
-  })();
+  const { total_income: income, total_expenses: expenses, balance, top_category: topCategory } = store.transactions_summary;
 
   const userName = store.logged_user?.name || store.logged_user?.email || 'Usuario';
   const isForced = !isAuthenticated;
@@ -186,7 +164,7 @@ export default function Dashboard() {
             />
             <StatCard
               title="Mayor gasto"
-              value={topCategory}
+              value={topCategory || '—'}
               subtitle="Categoría principal"
             />
           </div>

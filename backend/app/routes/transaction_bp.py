@@ -24,10 +24,11 @@ def get_transactions():
     per_page = request.args.get('per_page', 5, type=int)
 
     try:
-        transactions, pagination = get_transactions_service(user_id, page, per_page)
+        transactions, pagination, summary = get_transactions_service(user_id, page, per_page)
         return jsonify({
             'data': transactions,
             'pagination': pagination,
+            'summary': summary,
         }), 200
     except BadRequestError as e:
         return jsonify({'error': str(e)}), 400

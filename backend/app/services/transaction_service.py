@@ -3,7 +3,7 @@ from app.models import Transaction, Category
 from app.exceptions import BadRequestError
 from app.services.n8n_service import parse_transaction_via_n8n
 from datetime import datetime, timezone
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 PER_PAGE_MAX = 50
 
@@ -38,7 +38,30 @@ def get_transactions_service(user_id: int, page: int = 1, per_page: int = 5):
         'has_prev': pagination.has_prev,
     }
 
-    return [t.serialize() for t in pagination.items], meta
+    # Estadísticas globales del usuario (independientes de la página)
+    totals = db.session.execute(
+        select(
+            func.coalesce(func.sum(Transaction.amount).filter(Transaction.amount > 0), 0),
+            func.coalesce(func.sum(Transaction.amount).filter(Transaction.amount < 0), 0),
+        ).where(Transaction.user_id == user_id)
+    ).one()
+
+    top_category_row = db.session.execute(
+        select(Transaction.category, func.sum(Transaction.amount).label('total'))
+        .where(Transaction.user_id == user_id, Transaction.amount < 0)
+        .group_by(Transaction.category)
+        .order_by(func.sum(Transaction.amount))
+        .limit(1)
+    ).first()
+
+    summary = {
+        'total_income': round(float(totals[0]), 2),
+        'total_expenses': round(abs(float(totals[1])), 2),
+        'balance': round(float(totals[0]) + float(totals[1]), 2),
+        'top_category': top_category_row[0] if top_category_row else None,
+    }
+
+    return [t.serialize() for t in pagination.items], meta, summary
 
 
 def create_transaction_service(user_id: int, raw_input: str):

@@ -11,6 +11,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 			user_loaded: false,
 			transactions: [],
 			transactions_pagination: { page: 1, per_page: 5, total: 0, pages: 1, has_next: false, has_prev: false },
+			transactions_summary: { total_income: 0, total_expenses: 0, balance: 0, top_category: null },
 			transactions_loaded: false,
 			categories: [],
 			categories_loaded: false,
@@ -159,7 +160,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 						throw new Error(data.error);
 					}
 
-					setStore({ ...store, logged_user: {}, user_loaded: true, transactions: [], transactions_pagination: { page: 1, per_page: 5, total: 0, pages: 1, has_next: false, has_prev: false }, transactions_loaded: false, categories: [], categories_loaded: false })
+					setStore({ ...store, logged_user: {}, user_loaded: true, transactions: [], transactions_pagination: { page: 1, per_page: 5, total: 0, pages: 1, has_next: false, has_prev: false }, transactions_summary: { total_income: 0, total_expenses: 0, balance: 0, top_category: null }, transactions_loaded: false, categories: [], categories_loaded: false })
 
 					return true;
 
@@ -183,7 +184,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					});
 					if (!resp.ok) throw new Error("Error al cargar las transacciones.");
 					const data = await resp.json();
-					setStore({ ...getStore(), transactions: data.data, transactions_pagination: data.pagination, transactions_loaded: true });
+					setStore({ ...getStore(), transactions: data.data, transactions_pagination: data.pagination, transactions_summary: data.summary, transactions_loaded: true });
 					return data;
 				} catch (error) {
 					setStore({ ...getStore(), error: error.message, transactions_loaded: true });
