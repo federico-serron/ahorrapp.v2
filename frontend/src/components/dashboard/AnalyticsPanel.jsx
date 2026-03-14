@@ -4,6 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, Sector,
 } from 'recharts';
+import { formatCurrency } from '../../js/utils/currency';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -24,7 +25,7 @@ const monthToRange = (ym) => {
     end: `${ym}-${String(last).padStart(2, '0')}`,
   };
 };
-const fmtEur = (v) => `${Number(v).toFixed(2)}€`;
+const fmtAmount = (v) => formatCurrency(v);
 
 // ── Colores para el pie ───────────────────────────────────────────────────────
 const PIE_COLORS = [
@@ -41,7 +42,7 @@ const BarTooltip = ({ active, payload, label }) => {
       <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</p>
       {payload.map((p) => (
         <p key={p.name} style={{ color: p.color }}>
-          {p.name === 'income' ? 'Ingresos' : 'Gastos'}: <span className="font-mono">{fmtEur(p.value)}</span>
+          {p.name === 'income' ? 'Ingresos' : 'Gastos'}: <span className="font-mono">{fmtAmount(p.value)}</span>
         </p>
       ))}
     </div>
@@ -54,7 +55,7 @@ const PieTooltip = ({ active, payload }) => {
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 shadow-lg text-xs">
       <p className="font-medium text-gray-700 dark:text-gray-300">{name}</p>
-      <p className="font-mono text-rose-500">{fmtEur(value)}</p>
+      <p className="font-mono text-rose-500">{fmtAmount(value)}</p>
       <p className="text-gray-400">{p.count} transacciones</p>
     </div>
   );
@@ -166,7 +167,7 @@ export default function AnalyticsPanel() {
               <div key={label} className="px-4 py-2 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
                 <p className="text-xs text-gray-400 dark:text-gray-500">{label}</p>
                 <p className={`text-sm font-mono font-medium ${color}`}>
-                  {value >= 0 ? '+' : ''}{fmtEur(value)}
+                  {value >= 0 ? '+' : '-'}{fmtAmount(value)}
                 </p>
               </div>
             ))}
@@ -196,7 +197,7 @@ export default function AnalyticsPanel() {
                     className="text-gray-400 dark:text-gray-600"
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(v) => `${v}€`}
+                    tickFormatter={(v) => formatCurrency(v)}
                     width={55}
                   />
                   <Tooltip content={<BarTooltip />} cursor={{ fill: 'transparent' }} />
@@ -259,7 +260,7 @@ export default function AnalyticsPanel() {
                         />
                         <span className="text-gray-700 dark:text-gray-300 truncate">{item.category}</span>
                       </div>
-                      <span className="font-mono text-gray-500 dark:text-gray-400 flex-shrink-0">{fmtEur(item.total)}</span>
+                      <span className="font-mono text-gray-500 dark:text-gray-400 flex-shrink-0">{fmtAmount(item.total)}</span>
                     </li>
                   ))}
                 </ul>

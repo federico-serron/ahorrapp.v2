@@ -10,6 +10,7 @@ import CategoriesPanel from '../../components/dashboard/CategoriesPanel';
 import AnalyticsPanel from '../../components/dashboard/AnalyticsPanel';
 import LoginModal from '../../components/LoginModal';
 import SignupModal from '../../components/SignupModal';
+import { formatCurrency } from '../../js/utils/currency';
 
 const tabTitles = {
   inicio: 'Inicio',
@@ -43,7 +44,7 @@ export default function Dashboard() {
     const result = await actions.createTransaction(transactionInput.trim());
 
     if (result) {
-      setLastTransaction(`${result.description} · ${result.amount >= 0 ? '+' : ''}${result.amount.toFixed(2)}€`);
+      setLastTransaction(`${result.description} · ${result.amount >= 0 ? '+' : '-'}${formatCurrency(result.amount)}`);
       setTransactionInput('');
       toast.success(`${result.category} · ${result.description}`);
     } else {
@@ -136,7 +137,7 @@ export default function Dashboard() {
                       handleTransactionSubmit(e);
                     }
                   }}
-                  placeholder="¿Qué ha pasado? Ej: Pagué 85€ en el super esta mañana..."
+                  placeholder="¿Qué pasó? Ej: Pagué $850 en el súper esta mañana..."
                   rows={3}
                   className="w-full resize-none bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl px-5 py-4 pr-32 text-gray-900 dark:text-gray-50 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-emerald-500 dark:focus:border-teal-400 transition-colors text-sm leading-relaxed"
                 />
@@ -160,13 +161,13 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
             <StatCard
               title="Gastos este mes"
-              value={expenses > 0 ? `-${expenses.toFixed(2)}€` : '0.00€'}
+              value={expenses > 0 ? `-${formatCurrency(expenses)}` : formatCurrency(0)}
               subtitle="Total de gastos"
               trendUp={false}
             />
             <StatCard
               title="Balance"
-              value={`${balance >= 0 ? '+' : ''}${balance.toFixed(2)}€`}
+              value={`${balance >= 0 ? '+' : '-'}${formatCurrency(balance)}`}
               subtitle="Ingresos - gastos"
               trendUp={balance >= 0}
             />

@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatCurrency } from '../../js/utils/currency';
 
 const CATEGORY_EMOJI = {
   'Alimentación': '🛒',
@@ -65,7 +66,7 @@ const TransactionsList = ({ transactions }) => {
                 ? 'text-emerald-600 dark:text-teal-400'
                 : 'text-red-500 dark:text-red-400'
             }`}>
-              {tx.amount >= 0 ? '+' : ''}{tx.amount.toFixed(2)}€
+              {tx.amount >= 0 ? '+' : '-'}{formatCurrency(tx.amount)}
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-600">
               {tx.date ? formatDate(tx.date) : ''}
