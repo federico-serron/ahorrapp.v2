@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Context } from '../../js/store/appContext';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, Sector,
 } from 'recharts';
 import { formatCurrency } from '../../js/utils/currency';
@@ -35,16 +35,12 @@ const PIE_COLORS = [
 ];
 
 // ── Tooltip personalizado ─────────────────────────────────────────────────────
-const BarTooltip = ({ active, payload, label }) => {
+const LineTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 shadow-lg text-xs">
-      <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</p>
-      {payload.map((p) => (
-        <p key={p.name} style={{ color: p.color }}>
-          {p.name === 'income' ? 'Ingresos' : 'Gastos'}: <span className="font-mono">{fmtAmount(p.value)}</span>
-        </p>
-      ))}
+      <p className="font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
+      <p className="font-mono text-yellow-200">{fmtAmount(payload[0].value)}</p>
     </div>
   );
 };
@@ -182,7 +178,7 @@ export default function AnalyticsPanel() {
               <p className="text-sm text-gray-400 dark:text-gray-600 py-8 text-center">Sin datos en este período</p>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={analytics.by_date} barCategoryGap="30%">
+                <LineChart data={analytics.by_date}>
                   <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-100 dark:text-gray-800" vertical={false} />
                   <XAxis
                     dataKey="date"
@@ -200,15 +196,16 @@ export default function AnalyticsPanel() {
                     tickFormatter={(v) => formatCurrency(v)}
                     width={55}
                   />
-                  <Tooltip content={<BarTooltip />} cursor={{ fill: 'transparent' }} />
-                  <Legend
-                    formatter={(v) => <span className="text-xs text-gray-500 dark:text-gray-400">{v === 'income' ? 'Ingresos' : 'Gastos'}</span>}
-                    iconType="square"
-                    iconSize={8}
+                  <Tooltip content={<LineTooltip />} />
+                  <Line
+                    dataKey="expenses"
+                    stroke="#fef9c3"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4, fill: '#fef9c3', stroke: '#fef9c3' }}
+                    style={{ filter: 'drop-shadow(0 0 6px rgba(254, 249, 195, 0.7))' }}
                   />
-                  <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                </LineChart>
               </ResponsiveContainer>
             )}
           </div>
