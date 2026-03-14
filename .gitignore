@@ -7,11 +7,9 @@ __pycache__/
 *.pyd
 instance/
 .env
-.env.*
 backend/.env
-
-!backend/.env.dev
-!backend/.env.prod
+backend/.env.dev
+backend/.env.prod
 
 
 # === NODE / VITE / REACT ===
@@ -20,6 +18,7 @@ frontend/dist/
 frontend/.vite/
 frontend/.parcel-cache/
 frontend/.env
+frontend/.env.prod
 frontend/tsconfig.json
 
 !frontend/.env.example
@@ -45,3 +44,7 @@ Thumbs.db
 
 # === GIT ===
 .git/
+
+# === CLAUDE ===
+CLAUDE.md
+.claude/

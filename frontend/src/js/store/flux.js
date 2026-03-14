@@ -9,7 +9,13 @@ const getState = ({ getStore, getActions, setStore }) => {
 			error: "",
 			logged_user: {},
 			user_loaded: false,
-
+			transactions: [],
+			transactions_pagination: { page: 1, per_page: 5, total: 0, pages: 1, has_next: false, has_prev: false },
+			transactions_loaded: false,
+			categories: [],
+			categories_loaded: false,
+			analytics: null,
+			analytics_loaded: false,
 		},
 		actions: {
 
@@ -153,7 +159,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 						throw new Error(data.error);
 					}
 
-					setStore({ ...store, logged_user: {}, user_loaded: true })
+					setStore({ ...store, logged_user: {}, user_loaded: true, transactions: [], transactions_pagination: { page: 1, per_page: 5, total: 0, pages: 1, has_next: false, has_prev: false }, transactions_loaded: false, categories: [], categories_loaded: false })
 
 					return true;
 
@@ -164,7 +170,126 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 			},
 
-			///////////////////////////////////////////////// PAYMENT METHODS /////////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////// TRANSACTIONS /////////////////////////////////////////////////////////////////
+
+			getTransactions: async (page = 1, per_page = 5) => {
+				const store = getStore();
+				setStore({ ...store, transactions_loaded: false });
+				try {
+					const resp = await fetch(`${backendUrl}/transaction/?page=${page}&per_page=${per_page}`, {
+						method: "GET",
+						headers: { "Content-type": "application/json" },
+						credentials: "include",
+					});
+					if (!resp.ok) throw new Error("Error al cargar las transacciones.");
+					const data = await resp.json();
+					setStore({ ...getStore(), transactions: data.data, transactions_pagination: data.pagination, transactions_loaded: true });
+					return data;
+				} catch (error) {
+					setStore({ ...getStore(), error: error.message, transactions_loaded: true });
+					return null;
+				}
+			},
+
+			createTransaction: async (rawInput) => {
+				const store = getStore();
+				try {
+					const resp = await fetch(backendUrl + "/transaction/", {
+						method: "POST",
+						headers: { "Content-type": "application/json" },
+						credentials: "include",
+						body: JSON.stringify({ raw_input: rawInput }),
+					});
+					const data = await resp.json();
+					if (!resp.ok) throw new Error(data.error);
+					// Recargar página 1 para reflejar la nueva transacción
+					await getActions().getTransactions(1, store.transactions_pagination.per_page);
+					return data.data;
+				} catch (error) {
+					setStore({ ...store, error: error.message });
+					return null;
+				}
+			},
+
+			///////////////////////////////////////////////// ANALYTICS /////////////////////////////////////////////////////////////////
+
+			getAnalytics: async (startDate, endDate) => {
+				const store = getStore();
+				setStore({ ...store, analytics_loaded: false });
+				try {
+					const resp = await fetch(`${backendUrl}/transaction/analytics?start_date=${startDate}&end_date=${endDate}`, {
+						method: "GET",
+						headers: { "Content-type": "application/json" },
+						credentials: "include",
+					});
+					if (!resp.ok) throw new Error("Error al cargar analíticas.");
+					const data = await resp.json();
+					setStore({ ...getStore(), analytics: data, analytics_loaded: true });
+					return data;
+				} catch (error) {
+					setStore({ ...getStore(), error: error.message, analytics_loaded: true });
+					return null;
+				}
+			},
+
+		///////////////////////////////////////////////// CATEGORIES /////////////////////////////////////////////////////////////////
+
+			getCategories: async () => {
+				const store = getStore();
+				try {
+					const resp = await fetch(backendUrl + "/category/", {
+						method: "GET",
+						headers: { "Content-type": "application/json" },
+						credentials: "include",
+					});
+					if (!resp.ok) throw new Error("Error al cargar las categorías.");
+					const data = await resp.json();
+					setStore({ ...store, categories: data.data, categories_loaded: true });
+					return data.data;
+				} catch (error) {
+					setStore({ ...store, error: error.message, categories_loaded: true });
+					return null;
+				}
+			},
+
+			createCategory: async (name, color) => {
+				const store = getStore();
+				try {
+					const resp = await fetch(backendUrl + "/category/", {
+						method: "POST",
+						headers: { "Content-type": "application/json" },
+						credentials: "include",
+						body: JSON.stringify({ name, color }),
+					});
+					const data = await resp.json();
+					if (!resp.ok) throw new Error(data.error);
+					setStore({ ...store, categories: [...store.categories, data.data], message: data.msg });
+					return data.data;
+				} catch (error) {
+					setStore({ ...store, error: error.message });
+					return null;
+				}
+			},
+
+			deleteCategory: async (id) => {
+				const store = getStore();
+				try {
+					const resp = await fetch(backendUrl + "/category/" + id, {
+						method: "DELETE",
+						headers: { "Content-type": "application/json" },
+						credentials: "include",
+					});
+					const data = await resp.json();
+					if (!resp.ok) throw new Error(data.error);
+					setStore({ ...store, categories: store.categories.filter((c) => c.id !== id) });
+					return true;
+				} catch (error) {
+					setStore({ ...store, error: error.message });
+					return false;
+				}
+			},
+
+		///////////////////////////////////////////////// PAYMENT METHODS /////////////////////////////////////////////////////////////////
 
 			/////////////////// PAYPAL /////////////////////////
 			createOrderPayPal: async (amount) => {

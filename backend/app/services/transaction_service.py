@@ -3,32 +3,42 @@ from app.models import Transaction, Category
 from app.exceptions import BadRequestError
 from app.services.n8n_service import parse_transaction_via_n8n
 from datetime import datetime, timezone
-from sqlalchemy import select, func
+from sqlalchemy import select
 
-LIMIT_MAX = 100
+PER_PAGE_MAX = 50
 
 
-def get_transactions_service(user_id: int, limit: int = 50, offset: int = 0):
-    """Devuelve las transacciones paginadas del usuario, ordenadas por fecha descendente."""
-    limit = min(max(limit, 1), LIMIT_MAX)
+def get_transactions_service(user_id: int, page: int = 1, per_page: int = 5):
+    """Devuelve una página de transacciones del usuario usando Flask-SQLAlchemy paginate().
 
-    transactions = (
-        db.session.execute(
-            select(Transaction)
-            .where(Transaction.user_id == user_id)
-            .order_by(Transaction.date.desc())
-            .limit(limit)
-            .offset(offset)
-        )
-        .scalars()
-        .all()
+    Args:
+        user_id: ID del usuario autenticado.
+        page: Número de página (base 1).
+        per_page: Registros por página (máx. PER_PAGE_MAX).
+
+    Returns:
+        Tupla (lista de transacciones serializadas, dict de metadatos de paginación).
+    """
+    per_page = min(max(per_page, 1), PER_PAGE_MAX)
+    page = max(page, 1)
+
+    pagination = (
+        db.session.query(Transaction)
+        .filter(Transaction.user_id == user_id)
+        .order_by(Transaction.date.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
     )
 
-    total = db.session.execute(
-        select(func.count()).select_from(Transaction).where(Transaction.user_id == user_id)
-    ).scalar()
+    meta = {
+        'page': pagination.page,
+        'per_page': pagination.per_page,
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'has_next': pagination.has_next,
+        'has_prev': pagination.has_prev,
+    }
 
-    return [t.serialize() for t in transactions], total
+    return [t.serialize() for t in pagination.items], meta
 
 
 def create_transaction_service(user_id: int, raw_input: str):

@@ -1,9 +1,9 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { XIcon } from './Icons'
+import React, { useState, useContext } from 'react';
+import { XIcon } from './Icons';
 import { Context } from '../js/store/appContext';
 import toast from 'react-hot-toast';
 
-const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
+const LoginModal = ({ isOpen, onClose, onSwitchToSignup, isForced = false }) => {
   const { actions, store } = useContext(Context);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,10 +20,16 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
   };
 
   const resetLoginModal = () => {
-    setEmail("")
-    setPassword("")
-    setErrors({})
-  }
+    setEmail('');
+    setPassword('');
+    setErrors({});
+  };
+
+  const handleClose = () => {
+    if (isForced) return;
+    onClose();
+    resetLoginModal();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,39 +43,86 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
         resetLoginModal();
       } else {
         toast.error(store.error);
-        return;
       }
     }
   };
 
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" onClick={()=>{onClose()
-          resetLoginModal()
-    }}>
-      <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6 sm:p-8" onClick={e => e.stopPropagation()}>
-        <button onClick={() => {
-          onClose()
-          resetLoginModal()
-        }} className="absolute top-3 right-3 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg p-1.5 transition-colors">
-          <XIcon className="w-5 h-5" />
-        </button>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Iniciar Sesión</h3>
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4"
+      onClick={handleClose}
+    >
+      <div
+        className="relative bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-2xl w-full max-w-sm p-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {!isForced && (
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors p-1 rounded-lg"
+          >
+            <XIcon className="w-4 h-4" />
+          </button>
+        )}
+
+        <div className="mb-8">
+          <div className="w-10 h-10 bg-emerald-500 dark:bg-teal-500 rounded-xl mb-4 flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Bienvenido</h3>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Inicia sesión para continuar</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tu email</label>
-            <input type="email" name="email" id="email" value={email} onChange={e => setEmail(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="nombre@email.com" />
-            {errors.email && <p className="mt-2 text-sm text-red-600 dark:text-red-500">{errors.email}</p>}
+            <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wider">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@email.com"
+              className="w-full bg-transparent border-0 border-b-2 border-gray-200 dark:border-gray-700 focus:border-emerald-500 dark:focus:border-teal-400 outline-none px-0 py-2 text-sm text-gray-900 dark:text-gray-50 placeholder-gray-300 dark:placeholder-gray-700 transition-colors"
+            />
+            {errors.email && <p className="mt-1.5 text-xs text-red-500">{errors.email}</p>}
           </div>
+
           <div>
-            <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tu contraseña</label>
-            <input type="password" name="password" id="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-            {errors.password && <p className="mt-2 text-sm text-red-600 dark:text-red-500">{errors.password}</p>}
+            <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wider">
+              Contraseña
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full bg-transparent border-0 border-b-2 border-gray-200 dark:border-gray-700 focus:border-emerald-500 dark:focus:border-teal-400 outline-none px-0 py-2 text-sm text-gray-900 dark:text-gray-50 placeholder-gray-300 dark:placeholder-gray-700 transition-colors"
+            />
+            {errors.password && <p className="mt-1.5 text-xs text-red-500">{errors.password}</p>}
           </div>
-          <button type="submit" className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-colors">Acceder a tu cuenta</button>
-          <div className="text-sm font-medium text-gray-500 dark:text-gray-300">
-            ¿No tienes cuenta? <a href="#" onClick={onSwitchToSignup} className="text-blue-700 hover:underline dark:text-blue-500">Crear cuenta</a>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              className="w-full bg-emerald-500 hover:bg-emerald-600 dark:bg-teal-500 dark:hover:bg-teal-600 text-white text-sm font-medium py-3 rounded-xl transition-colors"
+            >
+              Iniciar sesión
+            </button>
           </div>
+
+          <p className="text-center text-xs text-gray-400 dark:text-gray-600">
+            ¿No tienes cuenta?{' '}
+            <button
+              type="button"
+              onClick={onSwitchToSignup}
+              className="text-emerald-600 dark:text-teal-400 hover:underline font-medium"
+            >
+              Crear cuenta
+            </button>
+          </p>
         </form>
       </div>
     </div>

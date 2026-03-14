@@ -64,7 +64,12 @@ def parse_transaction_via_n8n(raw_input: str, user_categories: list[str] | None 
         (c for c in available_categories if c.lower() == returned_category.lower()),
         None
     )
-    category = matched if matched else available_categories[-1]
+    if not matched:
+        current_app.logger.warning(
+            f"n8n devolvió categoría no válida: '{returned_category}'. "
+            f"Disponibles: {available_categories}. Usando la primera."
+        )
+    category = matched if matched else available_categories[0]
 
     return {
         "description": str(data["description"]).strip()[:50],

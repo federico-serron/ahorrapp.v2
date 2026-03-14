@@ -1,6 +1,8 @@
+from datetime import date, datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services.transaction_service import get_transactions_service, create_transaction_service
+from app.services.analytics_service import get_analytics_service
 from app.exceptions import BadRequestError
 
 transaction_bp = Blueprint('transaction_bp', __name__)
@@ -17,17 +19,15 @@ def get_transactions():
         limit (int): máximo de resultados (1-100, por defecto 50)
         offset (int): posición de inicio para paginación (por defecto 0)
     """
-    user_id = get_jwt_identity()
-    limit = request.args.get('limit', 50, type=int)
-    offset = request.args.get('offset', 0, type=int)
+    user_id = int(get_jwt_identity())
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 5, type=int)
 
     try:
-        transactions, total = get_transactions_service(user_id, limit, offset)
+        transactions, pagination = get_transactions_service(user_id, page, per_page)
         return jsonify({
             'data': transactions,
-            'total': total,
-            'limit': limit,
-            'offset': offset,
+            'pagination': pagination,
         }), 200
     except BadRequestError as e:
         return jsonify({'error': str(e)}), 400
@@ -55,7 +55,7 @@ def create_transaction():
         400: { error }
         500: { error }
     """
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     body = request.get_json(silent=True)
 
     if not body or not body.get('raw_input'):
@@ -68,5 +68,39 @@ def create_transaction():
         return jsonify({'error': str(e)}), 400
     except RuntimeError as e:
         return jsonify({'error': str(e)}), 503
+    except Exception:
+        return jsonify({'error': 'Error interno del servidor.'}), 500
+
+
+@transaction_bp.route('/analytics', methods=['GET'])
+@jwt_required(locations=["cookies", "headers"])
+def get_analytics():
+    """Devuelve datos agregados para los gráficos de analíticas.
+
+    Query params:
+        start_date (str): Fecha inicio en formato YYYY-MM-DD (por defecto: primer día del mes actual).
+        end_date   (str): Fecha fin en formato YYYY-MM-DD (por defecto: hoy).
+
+    Returns:
+        200: { by_date, by_category, group_by, summary }
+        400: { error }
+    """
+    user_id = int(get_jwt_identity())
+    today = date.today()
+
+    start_str = request.args.get('start_date', today.replace(day=1).isoformat())
+    end_str = request.args.get('end_date', today.isoformat())
+
+    try:
+        start_date = date.fromisoformat(start_str)
+        end_date = date.fromisoformat(end_str)
+    except ValueError:
+        return jsonify({'error': 'Formato de fecha inválido. Usa YYYY-MM-DD.'}), 400
+
+    try:
+        data = get_analytics_service(user_id, start_date, end_date)
+        return jsonify(data), 200
+    except BadRequestError as e:
+        return jsonify({'error': str(e)}), 400
     except Exception:
         return jsonify({'error': 'Error interno del servidor.'}), 500
