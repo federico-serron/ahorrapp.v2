@@ -48,3 +48,4 @@ Thumbs.db
 # === CLAUDE ===
 CLAUDE.md
 .claude/
+skills-lock.json
