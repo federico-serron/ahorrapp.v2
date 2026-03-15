@@ -212,6 +212,41 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 			},
 
+			updateTransaction: async (id, data) => {
+				const store = getStore();
+				try {
+					const resp = await fetch(`${backendUrl}/transaction/${id}`, {
+						method: "PUT",
+						headers: { "Content-type": "application/json" },
+						credentials: "include",
+						body: JSON.stringify(data),
+					});
+					const json = await resp.json();
+					if (!resp.ok) throw new Error(json.error);
+					await getActions().getTransactions(store.transactions_pagination.page, store.transactions_pagination.per_page);
+					return json.data;
+				} catch (error) {
+					setStore({ ...getStore(), error: error.message });
+					return null;
+				}
+			},
+
+			deleteTransaction: async (id) => {
+				const store = getStore();
+				try {
+					const resp = await fetch(`${backendUrl}/transaction/${id}`, {
+						method: "DELETE",
+						credentials: "include",
+					});
+					if (!resp.ok) throw new Error("Error al eliminar.");
+					await getActions().getTransactions(store.transactions_pagination.page, store.transactions_pagination.per_page);
+					return true;
+				} catch (error) {
+					setStore({ ...getStore(), error: error.message });
+					return false;
+				}
+			},
+
 			///////////////////////////////////////////////// ANALYTICS /////////////////////////////////////////////////////////////////
 
 			getAnalytics: async (startDate, endDate) => {

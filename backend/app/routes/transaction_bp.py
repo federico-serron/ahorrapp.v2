@@ -1,9 +1,9 @@
 from datetime import date, datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.services.transaction_service import get_transactions_service, create_transaction_service
+from app.services.transaction_service import get_transactions_service, create_transaction_service, update_transaction_service, delete_transaction_service
 from app.services.analytics_service import get_analytics_service
-from app.exceptions import BadRequestError
+from app.exceptions import BadRequestError, NotFoundError
 
 transaction_bp = Blueprint('transaction_bp', __name__)
 
@@ -69,6 +69,35 @@ def create_transaction():
         return jsonify({'error': str(e)}), 400
     except RuntimeError as e:
         return jsonify({'error': str(e)}), 503
+    except Exception:
+        return jsonify({'error': 'Error interno del servidor.'}), 500
+
+
+@transaction_bp.route('/<int:transaction_id>', methods=['PUT'])
+@jwt_required(locations=["cookies", "headers"])
+def update_transaction(transaction_id):
+    user_id = int(get_jwt_identity())
+    body = request.get_json(silent=True) or {}
+    try:
+        transaction = update_transaction_service(user_id, transaction_id, body)
+        return jsonify({'msg': 'Transacción actualizada.', 'data': transaction}), 200
+    except NotFoundError as e:
+        return jsonify({'error': str(e)}), 404
+    except BadRequestError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception:
+        return jsonify({'error': 'Error interno del servidor.'}), 500
+
+
+@transaction_bp.route('/<int:transaction_id>', methods=['DELETE'])
+@jwt_required(locations=["cookies", "headers"])
+def delete_transaction(transaction_id):
+    user_id = int(get_jwt_identity())
+    try:
+        delete_transaction_service(user_id, transaction_id)
+        return jsonify({'msg': 'Transacción eliminada.'}), 200
+    except NotFoundError as e:
+        return jsonify({'error': str(e)}), 404
     except Exception:
         return jsonify({'error': 'Error interno del servidor.'}), 500
 

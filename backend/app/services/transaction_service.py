@@ -1,6 +1,6 @@
 from app import db
 from app.models import Transaction, Category
-from app.exceptions import BadRequestError
+from app.exceptions import BadRequestError, NotFoundError
 from app.services.n8n_service import parse_transaction_via_n8n
 from datetime import datetime, timezone
 from sqlalchemy import select, func
@@ -107,3 +107,36 @@ def create_transaction_service(user_id: int, raw_input: str):
     db.session.add(transaction)
     db.session.commit()
     return transaction.serialize()
+
+
+def update_transaction_service(user_id: int, transaction_id: int, data: dict):
+    transaction = db.session.get(Transaction, transaction_id)
+    if not transaction or transaction.user_id != user_id:
+        raise NotFoundError("Transacción no encontrada.")
+
+    if 'description' in data:
+        desc = str(data['description']).strip()[:50]
+        if not desc:
+            raise BadRequestError("La descripción no puede estar vacía.")
+        transaction.description = desc
+
+    if 'amount' in data:
+        amount = abs(float(data['amount']))
+        if amount <= 0:
+            raise BadRequestError("El monto debe ser mayor a 0.")
+        is_income = bool(data.get('is_income', transaction.amount >= 0))
+        transaction.amount = round(amount if is_income else -amount, 2)
+
+    if 'category' in data:
+        transaction.category = str(data['category'])[:50]
+
+    db.session.commit()
+    return transaction.serialize()
+
+
+def delete_transaction_service(user_id: int, transaction_id: int):
+    transaction = db.session.get(Transaction, transaction_id)
+    if not transaction or transaction.user_id != user_id:
+        raise NotFoundError("Transacción no encontrada.")
+    db.session.delete(transaction)
+    db.session.commit()
