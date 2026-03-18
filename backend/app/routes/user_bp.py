@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt, set_access_cookies, unset_jwt_cookies
 from app.models import User
 from app import bcrypt
-from app.services.auth_service import create_user_service, login_user_service, edit_user_service
+from app.services.auth_service import create_user_service, login_user_service, edit_user_service, update_profile_service
 from app.exceptions import NotFoundError, UnauthorizedError, ConflictError, BadRequestError
 from app.blacklist import BLACKLIST
 
@@ -14,13 +14,38 @@ user_bp = Blueprint('user', __name__)
 def me():
     user_id = get_jwt_identity()
     claims = get_jwt()
-    
+
     return jsonify({
         "authenticated": True,
         "user_id": user_id,
-        #"role": claims.get("role"),
         "role": None
     }), 200
+
+
+@user_bp.route('/me', methods=['PUT'])
+@jwt_required(locations=["cookies"])
+def update_me():
+    user_id = int(get_jwt_identity())
+
+    try:
+        data = request.get_json(silent=True) or {}
+        name  = data.get('name',  None)
+        phone = data.get('phone', None)
+
+        if name is None and phone is None:
+            raise BadRequestError("Se debe enviar al menos un campo para actualizar.")
+
+        updated_user = update_profile_service(user_id, name=name, phone=phone)
+        return jsonify({"msg": "Perfil actualizado correctamente.", "user": updated_user}), 200
+
+    except BadRequestError as e:
+        return jsonify({"error": str(e)}), 400
+
+    except NotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+
+    except Exception as e:
+        return jsonify({"error": "Error al actualizar el perfil: " + str(e)}), 500
     
 
 @user_bp.route('/signup', methods=['POST'])

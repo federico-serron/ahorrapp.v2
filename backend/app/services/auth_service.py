@@ -1,8 +1,12 @@
+import re
 from app import db, bcrypt
 from app.models import User
 from app.exceptions import NotFoundError, UnauthorizedError, BadRequestError, ConflictError
 from datetime import timedelta
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+
+_NAME_RE  = re.compile(r'^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$')
+_PHONE_RE = re.compile(r'^\+?\d+$')
 
 
 def create_user_service(**kwargs):
@@ -113,6 +117,48 @@ def edit_user_service(user_id, **kwargs):
         
     db.session.commit()
     
+    return user.serialize()
+
+
+def update_profile_service(user_id, name=None, phone=None):
+    """
+    Updates name and/or phone for the authenticated user.
+
+    Receives:
+        user_id (int): ID of the user to update.
+        name (str | None): New name. If provided must be non-empty and contain only letters.
+        phone (str | None): New phone. If provided must contain only digits and optional leading +.
+                            Empty string clears the field.
+
+    Returns:
+        dict -> The serialized user after editing.
+
+    Raises:
+        NotFoundError: If the user does not exist.
+        BadRequestError: If name or phone fail validation.
+    """
+    user = db.session.get(User, int(user_id))
+    if not user:
+        raise NotFoundError("User not found.")
+
+    if name is not None:
+        name = name.strip()
+        if not name:
+            raise BadRequestError("El nombre no puede estar vacío.")
+        if not _NAME_RE.match(name):
+            raise BadRequestError("El nombre solo puede contener letras.")
+        user.name = name
+
+    if phone is not None:
+        phone = phone.strip()
+        if phone == '':
+            user.phone = None
+        elif not _PHONE_RE.match(phone):
+            raise BadRequestError("El teléfono solo puede contener números y el símbolo +.")
+        else:
+            user.phone = phone
+
+    db.session.commit()
     return user.serialize()
 
 
