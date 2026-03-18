@@ -194,12 +194,22 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 			createTransaction: async (rawInput) => {
 				const store = getStore();
+				const SAFE_RE = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9\s+\-.,]+$/;
+				const sanitized = (rawInput || '').trim();
+				if (!sanitized) {
+					setStore({ ...store, error: 'La descripción no puede estar vacía' });
+					return null;
+				}
+				if (!SAFE_RE.test(sanitized)) {
+					setStore({ ...store, error: 'La descripción contiene caracteres no permitidos' });
+					return null;
+				}
 				try {
 					const resp = await fetch(backendUrl + "/transaction/", {
 						method: "POST",
 						headers: { "Content-type": "application/json" },
 						credentials: "include",
-						body: JSON.stringify({ raw_input: rawInput }),
+						body: JSON.stringify({ raw_input: sanitized }),
 					});
 					const data = await resp.json();
 					if (!resp.ok) throw new Error(data.error);
@@ -290,12 +300,22 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 			createCategory: async (name, color) => {
 				const store = getStore();
+				const SAFE_RE = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9\s+\-.,]+$/;
+				const sanitized = (name || '').trim();
+				if (!sanitized) {
+					setStore({ ...store, error: 'El nombre no puede estar vacío' });
+					return null;
+				}
+				if (!SAFE_RE.test(sanitized)) {
+					setStore({ ...store, error: 'El nombre contiene caracteres no permitidos' });
+					return null;
+				}
 				try {
 					const resp = await fetch(backendUrl + "/category/", {
 						method: "POST",
 						headers: { "Content-type": "application/json" },
 						credentials: "include",
-						body: JSON.stringify({ name, color }),
+						body: JSON.stringify({ name: sanitized, color }),
 					});
 					const data = await resp.json();
 					if (!resp.ok) throw new Error(data.error);

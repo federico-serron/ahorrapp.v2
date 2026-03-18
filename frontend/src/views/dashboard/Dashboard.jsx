@@ -119,7 +119,7 @@ export default function Dashboard() {
               <div className="relative">
                 <textarea
                   value={transactionInput}
-                  onChange={(e) => setTransactionInput(e.target.value)}
+                  onChange={(e) => setTransactionInput(e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9\s+\-.,]/g, ''))}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
