@@ -325,6 +325,35 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 			},
 
+		///////////////////////////////////////////////// PROFILE /////////////////////////////////////////////////////////////////
+
+			updateProfile: async ({ name, phone }) => {
+				const store = getStore();
+				const trimmedName  = (name  || '').trim();
+				const trimmedPhone = (phone || '').trim();
+
+				if (!trimmedName) {
+					setStore({ ...store, error: 'El nombre no puede estar vacío' });
+					return false;
+				}
+
+				try {
+					const resp = await fetch(backendUrl + "/user/me", {
+						method: "PUT",
+						headers: { "Content-Type": "application/json" },
+						credentials: "include",
+						body: JSON.stringify({ name: trimmedName, phone: trimmedPhone || null }),
+					});
+					const data = await resp.json();
+					if (!resp.ok) throw new Error(data.error);
+					setStore({ ...store, logged_user: { ...store.logged_user, name: trimmedName, phone: trimmedPhone || null } });
+					return true;
+				} catch (error) {
+					setStore({ ...store, error: error.message });
+					return false;
+				}
+			},
+
 		///////////////////////////////////////////////// PAYMENT METHODS /////////////////////////////////////////////////////////////////
 
 			/////////////////// PAYPAL /////////////////////////

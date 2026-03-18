@@ -8,6 +8,7 @@ import StatCard from '../../components/dashboard/StatCard';
 import TransactionsList from '../../components/dashboard/TransactionsList';
 import CategoriesPanel from '../../components/dashboard/CategoriesPanel';
 import AnalyticsPanel from '../../components/dashboard/AnalyticsPanel';
+import ProfilePanel from '../../components/dashboard/ProfilePanel';
 import LoginModal from '../../components/LoginModal';
 import SignupModal from '../../components/SignupModal';
 import { formatCurrency } from '../../js/utils/currency';
@@ -99,8 +100,15 @@ export default function Dashboard() {
           {/* Analíticas */}
           {activeTab === 'analiticas' && <AnalyticsPanel />}
 
-          {/* Configuración: gestión de categorías */}
-          {activeTab === 'configuracion' && <CategoriesPanel />}
+          {/* Configuración: perfil + categorías */}
+          {activeTab === 'configuracion' && (
+            <div className="space-y-10">
+              <ProfilePanel />
+              <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
+                <CategoriesPanel />
+              </div>
+            </div>
+          )}
 
           {/* Contenido principal: inicio y transacciones */}
           {activeTab !== 'configuracion' && activeTab !== 'analiticas' && <>
