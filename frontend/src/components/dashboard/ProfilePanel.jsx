@@ -17,18 +17,32 @@ export default function ProfilePanel() {
     setPhone(user.phone || '');
   }, [user.name, user.phone]);
 
-  const isDirty =
-    name.trim() !== (user.name  || '') ||
-    phone.trim() !== (user.phone || '');
+  const handleNameChange = (e) => {
+    // Solo letras, espacios y caracteres acentuados
+    setName(e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, ''));
+  };
 
-  const isValid = name.trim().length > 0;
+  const handlePhoneChange = (e) => {
+    // Solo dígitos
+    setPhone(e.target.value.replace(/[^\d+]/g, ''));
+  };
+
+  const nameChanged  = name.trim()  !== (user.name  || '');
+  const phoneChanged = phone.trim() !== (user.phone || '');
+  const isDirty = nameChanged || phoneChanged;
+
+  // Nombre válido si cambió y no está vacío; teléfono siempre válido (solo dígitos por filtro)
+  const isFormValid = isDirty && (!nameChanged || name.trim().length > 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isDirty || !isValid || saving) return;
+    if (!isDirty || !isFormValid || saving) return;
 
     setSaving(true);
-    const ok = await actions.updateProfile({ name, phone });
+    const ok = await actions.updateProfile({
+      name:  nameChanged  ? name.trim()  : undefined,
+      phone: phoneChanged ? phone.trim() : undefined,
+    });
     setSaving(false);
     if (ok) {
       setSaved(true);
@@ -77,7 +91,7 @@ export default function ProfilePanel() {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
               placeholder="Tu nombre completo"
               maxLength={80}
               className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-gray-50 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-emerald-500 dark:focus:border-teal-400 transition-colors"
@@ -99,7 +113,7 @@ export default function ProfilePanel() {
             <input
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={handlePhoneChange}
               placeholder="+598 09x xxx xxx"
               maxLength={30}
               className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-gray-50 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-emerald-500 dark:focus:border-teal-400 transition-colors"
@@ -111,7 +125,7 @@ export default function ProfilePanel() {
         <div className="pt-1">
           <button
             type="submit"
-            disabled={!isDirty || !isValid || saving}
+            disabled={!isFormValid || saving}
             className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 dark:bg-teal-500 dark:hover:bg-teal-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors"
           >
             {saving ? (

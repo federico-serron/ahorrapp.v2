@@ -329,24 +329,43 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 			updateProfile: async ({ name, phone }) => {
 				const store = getStore();
-				const trimmedName  = (name  || '').trim();
-				const trimmedPhone = (phone || '').trim();
 
-				if (!trimmedName) {
-					setStore({ ...store, error: 'El nombre no puede estar vacío' });
+				const LETTERS_RE = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/;
+				const PHONE_RE = /^\+?\d+$/;
+
+				const trimmedName  = name  !== undefined ? name.trim()  : undefined;
+				const trimmedPhone = phone !== undefined ? phone.trim() : undefined;
+
+				if (trimmedName !== undefined) {
+					if (!trimmedName) {
+						setStore({ ...store, error: 'El nombre no puede estar vacío' });
+						return false;
+					}
+					if (!LETTERS_RE.test(trimmedName)) {
+						setStore({ ...store, error: 'El nombre solo puede contener letras' });
+						return false;
+					}
+				}
+
+				if (trimmedPhone !== undefined && trimmedPhone !== '' && !PHONE_RE.test(trimmedPhone)) {
+					setStore({ ...store, error: 'El teléfono solo puede contener números y el símbolo +' });
 					return false;
 				}
+
+				const body = {};
+				if (trimmedName  !== undefined) body.name  = trimmedName;
+				if (trimmedPhone !== undefined) body.phone = trimmedPhone || null;
 
 				try {
 					const resp = await fetch(backendUrl + "/user/me", {
 						method: "PUT",
 						headers: { "Content-Type": "application/json" },
 						credentials: "include",
-						body: JSON.stringify({ name: trimmedName, phone: trimmedPhone || null }),
+						body: JSON.stringify(body),
 					});
 					const data = await resp.json();
 					if (!resp.ok) throw new Error(data.error);
-					setStore({ ...store, logged_user: { ...store.logged_user, name: trimmedName, phone: trimmedPhone || null } });
+					setStore({ ...store, logged_user: { ...store.logged_user, ...body } });
 					return true;
 				} catch (error) {
 					setStore({ ...store, error: error.message });
