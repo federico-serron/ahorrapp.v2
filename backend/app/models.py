@@ -10,6 +10,8 @@ class User(db.Model):
     name: Mapped[str] = mapped_column(String(60), nullable=False)
     email: Mapped[str] = mapped_column(String(60), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(60), nullable=False)
+    role: Mapped[str] = mapped_column(String(20), nullable=False, default='user')
+    is_premium: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
     phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, default=None)
     last_login: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now(timezone.utc))
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=True)
@@ -22,6 +24,8 @@ class User(db.Model):
             'id': self.id,
             'name': self.name,
             'email': self.email,
+            'role': self.role,
+            'is_premium': self.is_premium,
             'phone': self.phone,
             'last_login': self.last_login,
             'is_active': self.is_active,

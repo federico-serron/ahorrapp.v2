@@ -40,7 +40,13 @@ def create_user_service(**kwargs):
     
     password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
     
-    new_user = User(name=name, email=email, password=password_hash)
+    new_user = User(
+        name=name,
+        email=email,
+        password=password_hash,
+        role='user',
+        is_premium=False,
+    )
     
     db.session.add(new_user)
     db.session.commit()

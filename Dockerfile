@@ -3,7 +3,7 @@ FROM node:20-alpine as frontend-builder
 WORKDIR /app
 
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm ci && npm install @rollup/rollup-linux-x64-musl --no-save
 
 COPY frontend/ ./
 RUN npm run build
@@ -28,4 +28,4 @@ ENV FLASK_APP=app/run.py
 EXPOSE 5100
 
 #CMD ["gunicorn", "--chdir", "backend", "app.run:app", "--bind", "0.0.0.0:5100", "--workers", "4", "--worker-class", "gevent"]
-CMD bash -c "cd backend && flask db upgrade && gunicorn app.run:app --bind 0.0.0.0:5100 --workers 2 --worker-class gevent"
+CMD bash -c "cd backend && flask db upgrade && gunicorn app.run:app --bind 0.0.0.0:5100 --workers 5 --worker-class gevent"

@@ -1,5 +1,21 @@
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
+const getCookie = (name) => {
+	const value = `; ${document.cookie}`;
+	const parts = value.split(`; ${name}=`);
+	if (parts.length === 2) return parts.pop().split(';').shift();
+	return null;
+};
+
+const withJsonHeaders = (includeCsrf = false) => {
+	const headers = { "Content-type": "application/json; charset=UTF-8" };
+	if (includeCsrf) {
+		const csrf = getCookie("csrf_access_token");
+		if (csrf) headers["X-CSRF-TOKEN"] = csrf;
+	}
+	return headers;
+};
+
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
@@ -148,9 +164,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 					const response = await fetch(URLlogout, {
 						method: "POST",
-						headers: {
-							"Content-type": "application/json"
-						},
+						headers: withJsonHeaders(true),
 						credentials: "include"
 					})
 
@@ -207,7 +221,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				try {
 					const resp = await fetch(backendUrl + "/transaction/", {
 						method: "POST",
-						headers: { "Content-type": "application/json" },
+						headers: withJsonHeaders(true),
 						credentials: "include",
 						body: JSON.stringify({ raw_input: sanitized }),
 					});
@@ -227,7 +241,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				try {
 					const resp = await fetch(`${backendUrl}/transaction/${id}`, {
 						method: "PUT",
-						headers: { "Content-type": "application/json" },
+						headers: withJsonHeaders(true),
 						credentials: "include",
 						body: JSON.stringify(data),
 					});
@@ -246,6 +260,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				try {
 					const resp = await fetch(`${backendUrl}/transaction/${id}`, {
 						method: "DELETE",
+						headers: withJsonHeaders(true),
 						credentials: "include",
 					});
 					if (!resp.ok) throw new Error("Error al eliminar.");
@@ -313,7 +328,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				try {
 					const resp = await fetch(backendUrl + "/category/", {
 						method: "POST",
-						headers: { "Content-type": "application/json" },
+						headers: withJsonHeaders(true),
 						credentials: "include",
 						body: JSON.stringify({ name: sanitized, color }),
 					});
@@ -332,7 +347,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				try {
 					const resp = await fetch(backendUrl + "/category/" + id, {
 						method: "DELETE",
-						headers: { "Content-type": "application/json" },
+						headers: withJsonHeaders(true),
 						credentials: "include",
 					});
 					const data = await resp.json();
@@ -379,7 +394,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				try {
 					const resp = await fetch(backendUrl + "/user/me", {
 						method: "PUT",
-						headers: { "Content-Type": "application/json" },
+						headers: withJsonHeaders(true),
 						credentials: "include",
 						body: JSON.stringify(body),
 					});

@@ -5,38 +5,57 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fullstackboiler
+    container_name: ahorrappv2
     restart: unless-stopped
-    env_file:
-      - ./backend/.env.prod
+    environment:
+      FLASK_ENV: ${FLASK_ENV}
+      FLASK_APP: ${FLASK_APP}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_COOKIE_SECURE: ${JWT_COOKIE_SECURE}
+      JWT_COOKIE_CSRF_PROTECT: ${JWT_COOKIE_CSRF_PROTECT}
+      JWT_COOKIE_SAMESITE: ${JWT_COOKIE_SAMESITE}
+      JWT_COOKIE_DOMAIN: ${JWT_COOKIE_DOMAIN}
+      FRONTEND_URL: ${FRONTEND_URL}
+      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_SECRET: ${PAYPAL_SECRET}
+      PAYPAL_API_BASE: ${PAYPAL_API_BASE}
+      PAYPAL_RETURN_URL: ${PAYPAL_RETURN_URL}
+      PAYPAL_CANCEL_URL: ${PAYPAL_CANCEL_URL}
     ports:
       - "5100:5100"
     volumes:
       - ./instance:/app/backend/app/instance
     networks:
-      - app-network
+      - ahorrapp-network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:16
     container_name: postgresdb
     restart: always 
-    env_file:
-      - ./backend/.env.prod
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: supersecreta
-      POSTGRES_DB: fullstack-starter
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ahorrappv2_pgdata:/var/lib/postgresql/data
     networks:
-      - app-network
+      - ahorrapp-network
 
 networks:
-  app-network:
+  ahorrapp-network:
     driver: bridge
 
 volumes:
-  pgdata:
+  ahorrappv2_pgdata:
     driver: local

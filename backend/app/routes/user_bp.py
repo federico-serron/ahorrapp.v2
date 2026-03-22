@@ -19,7 +19,7 @@ def me():
 
     return jsonify({
         "authenticated": True,
-        "role": None,
+        "role": user.role,
         **user.serialize(),
     }), 200
 

@@ -1,19 +1,21 @@
-# Ignorar virtual env
+# Dependencias locales
 backend/venv/
+frontend/node_modules/
+node_modules/
 
-# Ignorar archivos .env generales
-*.env
+# Archivos .env (excepto el del front para el build)
 .env
 .env.*
 backend/.env
-
-# Incluid .env del front
 !frontend/.env.prod
 
-# Otros archivos comunes a ignorar
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# Logs y misc
 *.log
-node_modules/
+.git/
+.gitignore
