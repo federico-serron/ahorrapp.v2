@@ -4,6 +4,7 @@
 ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=FFD62E)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+[![Build & Push Docker Image](https://github.com/federico-serron/ahorrapp.v2/actions/workflows/docker-latest.yml/badge.svg)](https://github.com/federico-serron/ahorrapp.v2/actions/workflows/docker-latest.yml)
 
 ---
 
@@ -206,7 +207,34 @@ README.md
 
 ---
 
-<p align="center" style="font-size:1.2em;">
+## 🐳 CI/CD y auto-actualización con Watchtower
+
+Cada push a la rama `master` dispara el workflow de GitHub Actions (`.github/workflows/docker-latest.yml`) que construye la imagen Docker y la publica automáticamente en Docker Hub como `fedesu/ahorrapp:latest`.
+
+Para que el servidor de producción descargue y recree el contenedor de forma automática **sin webhooks de Portainer**, puedes usar [Watchtower](https://containrrr.dev/watchtower/).
+
+### Levantar Watchtower en el host
+
+```bash
+docker compose -f deploy/watchtower/docker-compose.yml up -d
+```
+
+Watchtower verificará cada 5 minutos si hay una nueva imagen `fedesu/ahorrapp:latest` en Docker Hub y recreará el contenedor automáticamente.
+
+### Limitar Watchtower a un solo servicio (recomendado)
+
+El archivo `docker-compose.yml` principal ya incluye la label necesaria en el servicio `app`:
+
+```yaml
+labels:
+  - "com.centurylinklabs.watchtower.enable=true"
+```
+
+Y el `deploy/watchtower/docker-compose.yml` tiene habilitada la opción `WATCHTOWER_LABEL_ENABLE: "true"`, por lo que Watchtower **solo actualizará** los contenedores que tengan esa label, dejando el resto sin tocar.
+
+---
+
+
   <b>✨ Hecho con ❤️ por Fede</b> <br/>
   <sub>Con una mención especial a <b>[David Cunha](https://www.youtube.com/telodigoencodigo)</b> 🙌</sub>
 </p>

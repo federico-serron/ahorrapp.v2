@@ -1,0 +1,26 @@
+# Watchtower — auto-actualización de contenedores Docker
+#
+# Levanta este stack en el host donde corre ahorrapp para que Watchtower
+# detecte nuevas versiones de "fedesu/ahorrapp:latest" y recree el contenedor
+# de forma automática, sin necesidad de webhooks de Portainer.
+#
+# Uso:
+#   docker compose -f deploy/watchtower/docker-compose.yml up -d
+
+services:
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # Intervalo de chequeo en segundos (300 = 5 minutos)
+      WATCHTOWER_POLL_INTERVAL: 300
+      # Solo actualiza contenedores con esta label habilitada
+      WATCHTOWER_LABEL_ENABLE: "true"
+      # Elimina imágenes viejas después de actualizar
+      WATCHTOWER_CLEANUP: "true"
+      # Para habilitar notificaciones (SMTP, Slack, etc.) descomenta y completa:
+      # WATCHTOWER_NOTIFICATIONS: "shoutrrr"
+      # WATCHTOWER_NOTIFICATION_URL: "smtp://user:pass@smtp.host:587/?to=you@example.com"
