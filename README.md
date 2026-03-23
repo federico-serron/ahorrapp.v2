@@ -4,6 +4,7 @@
 ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=FFD62E)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+[![Build & Push Docker Image](https://github.com/federico-serron/ahorrapp.v2/actions/workflows/docker-latest.yml/badge.svg)](https://github.com/federico-serron/ahorrapp.v2/actions/workflows/docker-latest.yml)
 
 ---
 
@@ -206,7 +207,15 @@ README.md
 
 ---
 
-<p align="center" style="font-size:1.2em;">
+## 🐳 CI/CD
+
+Cada push a la rama `master` dispara el workflow de GitHub Actions (`.github/workflows/docker-latest.yml`) que construye la imagen Docker y la publica automáticamente en Docker Hub como `fedesu/ahorrapp:latest`.
+
+Watchtower (corriendo en el servidor de producción) detecta la nueva imagen y recrea el contenedor automáticamente.
+
+---
+
+
   <b>✨ Hecho con ❤️ por Fede</b> <br/>
   <sub>Con una mención especial a <b>[David Cunha](https://www.youtube.com/telodigoencodigo)</b> 🙌</sub>
 </p>
