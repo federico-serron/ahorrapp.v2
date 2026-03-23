@@ -207,30 +207,11 @@ README.md
 
 ---
 
-## 🐳 CI/CD y auto-actualización con Watchtower
+## 🐳 CI/CD
 
 Cada push a la rama `master` dispara el workflow de GitHub Actions (`.github/workflows/docker-latest.yml`) que construye la imagen Docker y la publica automáticamente en Docker Hub como `fedesu/ahorrapp:latest`.
 
-Para que el servidor de producción descargue y recree el contenedor de forma automática **sin webhooks de Portainer**, puedes usar [Watchtower](https://containrrr.dev/watchtower/).
-
-### Levantar Watchtower en el host
-
-```bash
-docker compose -f deploy/watchtower/docker-compose.yml up -d
-```
-
-Watchtower verificará cada 5 minutos si hay una nueva imagen `fedesu/ahorrapp:latest` en Docker Hub y recreará el contenedor automáticamente.
-
-### Limitar Watchtower a un solo servicio (recomendado)
-
-El archivo `docker-compose.yml` principal ya incluye la label necesaria en el servicio `app`:
-
-```yaml
-labels:
-  - "com.centurylinklabs.watchtower.enable=true"
-```
-
-Y el `deploy/watchtower/docker-compose.yml` tiene habilitada la opción `WATCHTOWER_LABEL_ENABLE: "true"`, por lo que Watchtower **solo actualizará** los contenedores que tengan esa label, dejando el resto sin tocar.
+Watchtower (corriendo en el servidor de producción) detecta la nueva imagen y recrea el contenedor automáticamente.
 
 ---
 

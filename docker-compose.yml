@@ -2,11 +2,11 @@ version: '3.9'
 
 services:
   app:
-    image: fedesu/ahorrapp:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: ahorrappv2
     restart: unless-stopped
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
     environment:
       FLASK_ENV: ${FLASK_ENV}
       FLASK_APP: ${FLASK_APP}
