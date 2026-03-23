@@ -1,4 +1,4 @@
-# 🚀 Fullstack Flask + React (Vite) — Guía de Inicio Rápido
+# 💸 AhorrApp — Guía de Inicio Rápido
 
 ![Flask](https://img.shields.io/badge/Flask-000?logo=flask&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
@@ -204,14 +204,6 @@ README.md
    - Usa PostgreSQL y configura bien tus contraseñas.
 
 🎉 ¡Listo! Ahora puedes desarrollar y probar tu aplicación fullstack Flask + React.
-
----
-
-## 🐳 CI/CD
-
-Cada push a la rama `master` dispara el workflow de GitHub Actions (`.github/workflows/docker-latest.yml`) que construye la imagen Docker y la publica automáticamente en Docker Hub como `fedesu/ahorrapp:latest`.
-
-Watchtower (corriendo en el servidor de producción) detecta la nueva imagen y recrea el contenedor automáticamente.
 
 ---
 
