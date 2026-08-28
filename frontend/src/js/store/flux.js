@@ -33,6 +33,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 			categories_loaded: false,
 			analytics: null,
 			analytics_loaded: false,
+			line_analytics: null,
+			line_analytics_loaded: false,
 		},
 		actions: {
 
@@ -289,6 +291,24 @@ const getState = ({ getStore, getActions, setStore }) => {
 					return data;
 				} catch (error) {
 					setStore({ ...getStore(), error: error.message, analytics_loaded: true });
+					return null;
+				}
+			},
+
+			getLineAnalytics: async (startDate, endDate) => {
+				setStore({ ...getStore(), line_analytics_loaded: false });
+				try {
+					const resp = await fetch(`${backendUrl}/transaction/analytics?start_date=${startDate}&end_date=${endDate}`, {
+						method: "GET",
+						headers: { "Content-type": "application/json" },
+						credentials: "include",
+					});
+					if (!resp.ok) throw new Error("Error al cargar analíticas.");
+					const data = await resp.json();
+					setStore({ ...getStore(), line_analytics: data, line_analytics_loaded: true });
+					return data;
+				} catch (error) {
+					setStore({ ...getStore(), error: error.message, line_analytics_loaded: true });
 					return null;
 				}
 			},
