@@ -42,6 +42,12 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db, compare_type=True)
 
+    from app.blacklist import BLACKLIST
+
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        return jwt_payload["jti"] in BLACKLIST
+
     # Creacion carpeta de DB si no existe y si se usa SQLite
     db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance', 'mydatabase.db')
     if not os.path.exists(os.path.dirname(db_path)):
@@ -52,13 +58,11 @@ def create_app():
     # Registramos blueprints
     from app.routes.public_bp import public_bp
     from app.routes.user_bp import user_bp
-    from app.routes.paypal_bp import paypal_bp
     from app.routes.transaction_bp import transaction_bp
     from app.routes.category_bp import category_bp
 
     app.register_blueprint(public_bp, url_prefix='/public')
     app.register_blueprint(user_bp, url_prefix='/user')
-    app.register_blueprint(paypal_bp, url_prefix='/paypal')
     app.register_blueprint(transaction_bp, url_prefix='/transaction')
     app.register_blueprint(category_bp, url_prefix='/category')
 
