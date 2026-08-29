@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 from app.services.paypal_service import get_access_token, create_order_service, capture_order_service
 from app.exceptions import NotFoundError, UnauthorizedError, ConflictError, BadRequestError
 from flask_jwt_extended import get_jwt_identity
@@ -22,12 +22,11 @@ def create_order():
     except BadRequestError as e:
         return jsonify({'error': str(e)}), 400
 
-    except Exception:
-        current_app.logger.exception("Error inesperado creando la orden de PayPal.")
-        return jsonify({'error': 'Error interno del servidor.'}), 500
-
-
-
+    except Exception as e:
+        return {"error": str(e)}, 500
+    
+    
+    
 @paypal_bp.route('/capture-order', methods=['POST'])
 def capture_order():
     try:
@@ -47,6 +46,5 @@ def capture_order():
     except NotFoundError as e:
         return jsonify({'error': str(e)}), 404
 
-    except Exception:
-        current_app.logger.exception("Error inesperado capturando la orden de PayPal.")
-        return jsonify({'error': 'Error interno del servidor.'}), 500
+    except Exception as e:
+        return {"error": str(e)}, 500
