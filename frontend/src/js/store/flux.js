@@ -428,64 +428,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 			},
 
-		///////////////////////////////////////////////// PAYMENT METHODS /////////////////////////////////////////////////////////////////
-
-			/////////////////// PAYPAL /////////////////////////
-			createOrderPayPal: async (amount) => {
-				const URLcreateOrder = `${backendUrl}/paypal/create-order`;
-				const store = getStore()
-
-				try {
-					const response = await fetch(URLcreateOrder, {
-						method: "POST",
-						body: JSON.stringify({ amount: amount }),
-						headers: withJsonHeaders(true),
-						credentials: "include"
-					})
-
-					const data = await response.json()
-					const approvalUrl = data.links.find((link) => link.rel === "approve")?.href;
-
-					if (approvalUrl) {
-						return approvalUrl;
-					} else {
-						throw new Error(data.error);
-					}
-
-				} catch (error) {
-					setStore({ ...store, error: error.message })
-					console.error(store.error)
-					return false
-				}
-			},
-
-			captureOrderPayPal: async (token) => {
-				const URLcaptureOrder = `${backendUrl}/paypal/capture-order`;
-				const store = getStore()
-
-				try {
-				const response = await fetch(URLcaptureOrder, {
-					method: "POST",
-					headers: withJsonHeaders(true),
-					credentials: "include",
-					body: JSON.stringify({ order_id: token }),
-
-				});
-
-				const data = await response.json();
-
-				if (data.status === "COMPLETED") {
-					return data;
-				}else{
-					throw new Error(data.error);
-				}
-
-				} catch (error) {
-					setStore({ ...store, error: error.message })
-					return false
-				}
-			},
-
 		}
 	};
 };
