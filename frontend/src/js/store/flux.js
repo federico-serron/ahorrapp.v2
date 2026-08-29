@@ -439,9 +439,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 					const response = await fetch(URLcreateOrder, {
 						method: "POST",
 						body: JSON.stringify({ amount: amount }),
-						headers: {
-							"Content-type": "application/json; charset=UTF-8"
-						}
+						headers: withJsonHeaders(true),
+						credentials: "include"
 					})
 
 					const data = await response.json()
@@ -467,9 +466,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				try {
 				const response = await fetch(URLcaptureOrder, {
 					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
+					headers: withJsonHeaders(true),
+					credentials: "include",
 					body: JSON.stringify({ order_id: token }),
 
 				});
