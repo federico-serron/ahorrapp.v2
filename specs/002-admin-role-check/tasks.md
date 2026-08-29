@@ -32,7 +32,7 @@ Proyecto web existente: `backend/app/...`, `backend/tests/...` (ver `plan.md` �
 **Purpose**: Cambio de código único que habilita tanto US1 (admin sigue funcionando) como US2
 (no-admin queda bloqueado). Ninguna user story es verificable sin esto.
 
-- [ ] T001 En `backend/app/routes/user_bp.py::show_users()`, reemplazar el chequeo actual
+- [X] T001 En `backend/app/routes/user_bp.py::show_users()`, reemplazar el chequeo actual
   (`if current_user_id: ... else: 401`) por: castear `user_id = int(get_jwt_identity())`, llamar
   a `is_user_admin(user_id)` (importar de `app.services.auth_service`), y solo si no levanta
   excepción armar y devolver el listado (200). Capturar **juntas** `UnauthorizedError` y
@@ -60,7 +60,7 @@ debe devolver `200` con la lista completa, igual que antes de esta feature.
 
 ### Tests for User Story 1
 
-- [ ] T002 [P] [US1] Test en `backend/tests/test_user_bp.py`: promover `sample_user` a
+- [X] T002 [P] [US1] Test en `backend/tests/test_user_bp.py`: promover `sample_user` a
   `role='admin'` directamente vía `db.session` (sin fixture nueva), autenticarse con
   `auth_headers`, y verificar que `GET /user/users` devuelve `200` con el listado completo.
   Asserta explícitamente que cada item tiene las claves de `User.serialize()`
@@ -81,20 +81,20 @@ rechazo es dinámico (no depende de un valor cacheado en el token).
 
 ### Tests for User Story 2
 
-- [ ] T003 [P] [US2] Test en `backend/tests/test_user_bp.py`: usuario autenticado con
+- [X] T003 [P] [US2] Test en `backend/tests/test_user_bp.py`: usuario autenticado con
   `role='user'` (default de `sample_user`) recibe `403` de `GET /user/users`. Asserta el body
   **exacto**: `{"error": "Usuario no tiene permisos para acceder"}` — ni una lista, ni ningún
   dato de usuarios, ni ningún otro texto (cubre SC-001 y SC-003 de forma explícita, no solo
   indirecta).
-- [ ] T004 [P] [US2] Test en `backend/tests/test_user_bp.py`: request sin cookie de sesión a
+- [X] T004 [P] [US2] Test en `backend/tests/test_user_bp.py`: request sin cookie de sesión a
   `GET /user/users` sigue devolviendo `401` (regresión del comportamiento preexistente de
   `@jwt_required`, FR-003).
-- [ ] T005 [US2] Test en `backend/tests/test_user_bp.py` (cubre FR-004): con la misma cookie de
+- [X] T005 [US2] Test en `backend/tests/test_user_bp.py` (cubre FR-004): con la misma cookie de
   sesión ya emitida para un usuario `role='user'` (request rechazada con `403`), actualizar su
   `role` a `'admin'` directamente vía `db.session` sin volver a loguearse, y repetir
   `GET /user/users` con la misma cookie → ahora debe devolver `200`, confirmando que el chequeo
   se evalúa fresco en cada request y no depende de un valor cacheado en el JWT.
-- [ ] T006 [US2] Test en `backend/tests/test_user_bp.py` (cubre el edge case de spec.md:62-63 y
+- [X] T006 [US2] Test en `backend/tests/test_user_bp.py` (cubre el edge case de spec.md:62-63 y
   la rama `NotFoundError` de `is_user_admin`): con una cookie de sesión ya emitida para un
   usuario válido, eliminar esa fila de `User` directamente vía `db.session.delete(user)` +
   `commit()` (o monkeypatchear `is_user_admin` para simular `NotFoundError`), y repetir
@@ -109,9 +109,9 @@ verificado.
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T007 [P] Actualizar `specs/001-project-baseline/tasks.md`: marcar **T002** como resuelto,
+- [X] T007 [P] Actualizar `specs/001-project-baseline/tasks.md`: marcar **T002** como resuelto,
   referenciando la branch `002-admin-role-check`.
-- [ ] T008 Correr `quickstart.md` de punta a punta (suite de pytest completa
+- [X] T008 Correr `quickstart.md` de punta a punta (suite de pytest completa
   `--ignore=tests/test_transaction_service.py` + validación manual opcional) y confirmar que
   nada más se rompió.
 

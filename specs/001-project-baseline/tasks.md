@@ -11,9 +11,10 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
 - [x] **T001** — Castear `get_jwt_identity()` a `int()` en `backend/app/routes/user_bp.py::edit_user()`.
   Viola Principio III de la constitución (siempre `int(get_jwt_identity())`).
   _Resuelto en `fix/mechanical-bugs-batch1` (commit `ef17199`)._
-- [ ] **T002** — Agregar chequeo de rol admin (`is_user_admin`) a `GET /user/users` en
+- [x] **T002** — Agregar chequeo de rol admin (`is_user_admin`) a `GET /user/users` en
   `backend/app/routes/user_bp.py::show_users()`. Hoy cualquier usuario autenticado lista todos
   los usuarios. Viola Principio II.
+  _Resuelto en `002-admin-role-check`._
 - [ ] **T003** — Reactivar la revocación de sesión en `backend/app/routes/user_bp.py::logout()`
   (descomentar/usar `BLACKLIST.add(jti)` y verificarlo en el loader de JWT). Hoy un token sigue
   siendo válido tras logout.

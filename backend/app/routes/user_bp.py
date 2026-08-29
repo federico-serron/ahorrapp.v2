@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt, set_access_cookies, unset_jwt_cookies
 from app.models import User
 from app import bcrypt, db
-from app.services.auth_service import create_user_service, login_user_service, edit_user_service, update_profile_service
+from app.services.auth_service import create_user_service, login_user_service, edit_user_service, update_profile_service, is_user_admin
 from app.exceptions import NotFoundError, UnauthorizedError, ConflictError, BadRequestError
 from app.blacklist import BLACKLIST
 
@@ -122,15 +122,16 @@ def edit_user():
 @user_bp.route('/users')
 @jwt_required(locations=["cookies"])
 def show_users():
-    current_user_id = get_jwt_identity()
-    if current_user_id:
-        users = User.query.all()
-        user_list = []
-        for user in users:
-            user_list.append(user.serialize())
-        return jsonify(user_list), 200
-    else:
-        return {"error": "Invalid or missing token"}, 401
+    user_id = int(get_jwt_identity())
+
+    try:
+        is_user_admin(user_id)
+    except (UnauthorizedError, NotFoundError):
+        return jsonify({"error": "Usuario no tiene permisos para acceder"}), 403
+
+    users = User.query.all()
+    user_list = [user.serialize() for user in users]
+    return jsonify(user_list), 200
     
     
 @user_bp.route("/logout", methods=["POST"])

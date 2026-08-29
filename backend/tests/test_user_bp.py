@@ -5,10 +5,14 @@ Covers:
   - create_user, login, edit_user, update_me (T005): regression for no
     longer leaking str(exception) details to the client on unexpected
     errors.
+  - show_users (002-admin-role-check, T002-T006): admin-only listing.
 """
 import app.routes.user_bp as user_bp_module
+from app import db
+from app.models import User
 
 SECRET_MSG = "secreto-interno-de-base-de-datos-xyz"
+FORBIDDEN_BODY = {"error": "Usuario no tiene permisos para acceder"}
 
 
 class TestEditUserEndpoint:
@@ -115,6 +119,65 @@ class TestLoginEndpoint:
         assert 'error' in body
         assert SECRET_MSG not in body['error']
         assert SECRET_MSG not in resp.get_data(as_text=True)
+
+
+class TestShowUsersEndpoint:
+
+    def test_admin_gets_full_user_list(self, client, auth_headers, sample_user, app):
+        """T002: a role='admin' account still gets 200 with the full listing."""
+        with app.app_context():
+            user = db.session.get(User, sample_user['id'])
+            user.role = 'admin'
+            db.session.commit()
+
+        resp = client.get('/user/users', headers=auth_headers)
+
+        assert resp.status_code == 200
+        body = resp.get_json()
+        assert isinstance(body, list)
+        assert len(body) >= 1
+        expected_keys = {'id', 'name', 'email', 'role', 'is_premium', 'phone', 'last_login', 'is_active'}
+        for item in body:
+            assert set(item.keys()) == expected_keys
+            assert 'password' not in item
+
+    def test_non_admin_is_rejected_with_generic_message(self, client, auth_headers):
+        """T003: default role='user' account is rejected with the exact generic body."""
+        resp = client.get('/user/users', headers=auth_headers)
+
+        assert resp.status_code == 403
+        assert resp.get_json() == FORBIDDEN_BODY
+
+    def test_unauthenticated_request_returns_401(self, client):
+        """T004: no session cookie still returns 401 (unchanged, enforced by @jwt_required)."""
+        resp = client.get('/user/users')
+        assert resp.status_code == 401
+
+    def test_role_check_is_evaluated_fresh_not_cached_in_jwt(self, client, auth_headers, sample_user, app):
+        """T005: promoting the user mid-session (same cookie) flips the result to 200."""
+        rejected = client.get('/user/users', headers=auth_headers)
+        assert rejected.status_code == 403
+
+        with app.app_context():
+            user = db.session.get(User, sample_user['id'])
+            user.role = 'admin'
+            db.session.commit()
+
+        allowed = client.get('/user/users', headers=auth_headers)
+        assert allowed.status_code == 200
+
+    def test_deleted_account_gets_same_generic_rejection(self, client, auth_headers, sample_user, app):
+        """T006: a user deleted after the token was issued gets the identical 403 body,
+        indistinguishable from the 'no permissions' case (no existence leak)."""
+        with app.app_context():
+            user = db.session.get(User, sample_user['id'])
+            db.session.delete(user)
+            db.session.commit()
+
+        resp = client.get('/user/users', headers=auth_headers)
+
+        assert resp.status_code == 403
+        assert resp.get_json() == FORBIDDEN_BODY
 
 
 class TestUpdateMeEndpoint:
