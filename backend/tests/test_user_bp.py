@@ -1,12 +1,14 @@
-"""Integration tests for backend/app/routes/user_bp.py::edit_user (T001).
+"""Integration tests for backend/app/routes/user_bp.py.
 
-Regression coverage for the fix that casts `get_jwt_identity()` to `int`
-before passing it to `edit_user_service`. Before the fix, `user_id` was a
-`str` (JWT identities are always stored as strings) — harmless on SQLite's
-weak typing but broken on PostgreSQL, where comparing an Integer column to a
-string value fails.
+Covers:
+  - edit_user (T001): regression for casting get_jwt_identity() to int.
+  - create_user, login, edit_user, update_me (T005): regression for no
+    longer leaking str(exception) details to the client on unexpected
+    errors.
 """
 import app.routes.user_bp as user_bp_module
+
+SECRET_MSG = "secreto-interno-de-base-de-datos-xyz"
 
 
 class TestEditUserEndpoint:
@@ -58,3 +60,76 @@ class TestEditUserEndpoint:
         resp = client.put('/user/edit', json={'email': 'new@example.com'}, headers=auth_headers)
         assert resp.status_code == 400
         assert 'error' in resp.get_json()
+
+    def test_edit_user_unexpected_error_does_not_leak_details(self, client, auth_headers, monkeypatch):
+        """T005: an unexpected exception must not leak its message to the client."""
+        def boom(user_id, **kwargs):
+            raise RuntimeError(SECRET_MSG)
+
+        monkeypatch.setattr(user_bp_module, 'edit_user_service', boom)
+
+        resp = client.put('/user/edit', json={'password': 'whatever123'}, headers=auth_headers)
+
+        assert resp.status_code == 500
+        body = resp.get_json()
+        assert 'error' in body
+        assert SECRET_MSG not in body['error']
+        assert SECRET_MSG not in resp.get_data(as_text=True)
+
+
+class TestCreateUserEndpoint:
+
+    def test_create_user_unexpected_error_does_not_leak_details(self, client, monkeypatch):
+        """T005: signup's unexpected-exception branch must not leak details."""
+        def boom(**kwargs):
+            raise RuntimeError(SECRET_MSG)
+
+        monkeypatch.setattr(user_bp_module, 'create_user_service', boom)
+
+        resp = client.post('/user/signup', json={
+            'name': 'New User', 'email': 'new_user@test.com', 'password': 'pass1234',
+        })
+
+        assert resp.status_code == 500
+        body = resp.get_json()
+        assert 'error' in body
+        assert SECRET_MSG not in body['error']
+        assert SECRET_MSG not in resp.get_data(as_text=True)
+
+
+class TestLoginEndpoint:
+
+    def test_login_unexpected_error_does_not_leak_details(self, client, monkeypatch):
+        """T005: login's unexpected-exception branch must not leak details."""
+        def boom(email, password):
+            raise RuntimeError(SECRET_MSG)
+
+        monkeypatch.setattr(user_bp_module, 'login_user_service', boom)
+
+        resp = client.post('/user/login', json={
+            'email': 'whoever@test.com', 'password': 'whatever123',
+        })
+
+        assert resp.status_code == 500
+        body = resp.get_json()
+        assert 'error' in body
+        assert SECRET_MSG not in body['error']
+        assert SECRET_MSG not in resp.get_data(as_text=True)
+
+
+class TestUpdateMeEndpoint:
+
+    def test_update_me_unexpected_error_does_not_leak_details(self, client, auth_headers, monkeypatch):
+        """T005: PUT /user/me's unexpected-exception branch must not leak details."""
+        def boom(user_id, name=None, phone=None):
+            raise RuntimeError(SECRET_MSG)
+
+        monkeypatch.setattr(user_bp_module, 'update_profile_service', boom)
+
+        resp = client.put('/user/me', json={'name': 'New Name'}, headers=auth_headers)
+
+        assert resp.status_code == 500
+        body = resp.get_json()
+        assert 'error' in body
+        assert SECRET_MSG not in body['error']
+        assert SECRET_MSG not in resp.get_data(as_text=True)

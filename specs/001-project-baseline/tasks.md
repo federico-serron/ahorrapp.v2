@@ -8,8 +8,9 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
 
 ## Backend — Seguridad / Autenticación
 
-- [ ] **T001** — Castear `get_jwt_identity()` a `int()` en `backend/app/routes/user_bp.py::edit_user()`.
+- [x] **T001** — Castear `get_jwt_identity()` a `int()` en `backend/app/routes/user_bp.py::edit_user()`.
   Viola Principio III de la constitución (siempre `int(get_jwt_identity())`).
+  _Resuelto en `fix/mechanical-bugs-batch1` (commit `ef17199`)._
 - [ ] **T002** — Agregar chequeo de rol admin (`is_user_admin`) a `GET /user/users` en
   `backend/app/routes/user_bp.py::show_users()`. Hoy cualquier usuario autenticado lista todos
   los usuarios. Viola Principio II.
@@ -58,6 +59,15 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
 - [ ] **T012** — Decidir qué hacer con las vistas no enrutadas (`Home.jsx`, `HomeView.jsx`,
   `ContactView.jsx`, `PaymentMethodsView.jsx`): conectarlas a `Layout.jsx` si van a usarse, o
   eliminarlas si son restos de una iteración anterior.
+
+## Hallazgos nuevos (detectados al trabajar en los bugs de arriba)
+
+- [ ] **T013** — `backend/tests/test_transaction_service.py` no colecciona: importa `LIMIT_MAX`
+  de `app.services.transaction_service`, pero ese módulo solo define `PER_PAGE_MAX` y la firma
+  real es `get_transactions_service(user_id, page=1, per_page=5)` (sin parámetro `limit`). Parece
+  un test desactualizado tras un refactor de paginación (de `limit/offset` a `page/per_page`).
+  Detectado el 2026-08-29 corriendo la suite completa para T001. No corregido — fuera de alcance
+  de `fix/mechanical-bugs-batch1`.
 
 ## Notas de priorización sugerida
 
