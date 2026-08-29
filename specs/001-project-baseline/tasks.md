@@ -40,11 +40,13 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
 - [ ] **T006** — Conectar `capture_order_service` (PayPal) con el dominio de negocio: crear una
   `Transaction` y/o actualizar `User.is_premium` cuando el pago se confirma. Hoy el pago se cobra
   pero no impacta en los datos del usuario.
-- [ ] **T007** — Agregar tests unitarios para `backend/app/services/auth_service.py` (create,
+- [x] **T007** — Agregar tests unitarios para `backend/app/services/auth_service.py` (create,
   login, edit, update_profile, is_user_admin) siguiendo el patrón de fixtures de
   `backend/tests/conftest.py`. Viola Principio VII (cobertura de tests obligatoria).
-- [ ] **T008** — Agregar tests de integración para los blueprints de usuario y pago
+  _Resuelto en `003-backend-test-coverage`._
+- [x] **T008** — Agregar tests de integración para los blueprints de usuario y pago
   (`user_bp.py`, `paypal_bp.py`), hoy sin cobertura.
+  _Resuelto en `003-backend-test-coverage`._
 
 ## Frontend — Inconsistencias de seguridad
 
@@ -67,12 +69,16 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
 
 ## Hallazgos nuevos (detectados al trabajar en los bugs de arriba)
 
-- [ ] **T013** — `backend/tests/test_transaction_service.py` no colecciona: importa `LIMIT_MAX`
+- [x] **T013** — `backend/tests/test_transaction_service.py` no colecciona: importa `LIMIT_MAX`
   de `app.services.transaction_service`, pero ese módulo solo define `PER_PAGE_MAX` y la firma
   real es `get_transactions_service(user_id, page=1, per_page=5)` (sin parámetro `limit`). Parece
   un test desactualizado tras un refactor de paginación (de `limit/offset` a `page/per_page`).
   Detectado el 2026-08-29 corriendo la suite completa para T001. No corregido — fuera de alcance
   de `fix/mechanical-bugs-batch1`.
+  _Resuelto en `003-backend-test-coverage`._ De paso se corrigió otra falla latente en
+  `TestCreateTransactionService::test_n8n_is_called_with_stripped_input` (aserción desactualizada
+  que faltaba el segundo argumento de `parse_transaction_via_n8n`), oculta hasta ahora porque el
+  archivo ni siquiera colectaba.
 
 ## Notas de priorización sugerida
 

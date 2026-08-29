@@ -13,7 +13,7 @@ from app.models import Transaction, User
 from app.services.transaction_service import (
     get_transactions_service,
     create_transaction_service,
-    LIMIT_MAX,
+    PER_PAGE_MAX,
 )
 from app.exceptions import BadRequestError
 
@@ -75,12 +75,12 @@ def _mock_n8n(description='Test', amount=10.0, category='Otros', is_income=False
 class TestGetTransactionsService:
 
     def test_returns_empty_list_when_no_transactions(self, app):
-        """User with no transactions gets an empty list and total=0."""
+        """User with no transactions gets an empty list and meta.total=0."""
         uid = _make_user(app, 'gt1')
         with app.app_context():
-            txs, total = get_transactions_service(uid)
+            txs, meta, summary = get_transactions_service(uid)
         assert txs == []
-        assert total == 0
+        assert meta['total'] == 0
 
     def test_returns_transactions_for_user(self, app):
         """All transactions belonging to the user are returned."""
@@ -88,9 +88,9 @@ class TestGetTransactionsService:
         _make_transaction(app, uid, 'Bus', -1.5)
         _make_transaction(app, uid, 'Salary', 2000.0)
         with app.app_context():
-            txs, total = get_transactions_service(uid)
+            txs, meta, summary = get_transactions_service(uid)
         assert len(txs) == 2
-        assert total == 2
+        assert meta['total'] == 2
 
     def test_does_not_return_other_users_transactions(self, app):
         """Transactions from another user are not included."""
@@ -99,13 +99,13 @@ class TestGetTransactionsService:
         _make_transaction(app, uid1, 'Mine', -5.0)
         _make_transaction(app, uid2, 'Theirs', -3.0)
         with app.app_context():
-            txs, total = get_transactions_service(uid1)
-        assert total == 1
+            txs, meta, summary = get_transactions_service(uid1)
+        assert meta['total'] == 1
         assert txs[0]['description'] == 'Mine'
 
     def test_transactions_are_ordered_by_date_descending(self, app):
         """Most recent transaction appears first."""
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timezone
         uid = _make_user(app, 'gt4')
         with app.app_context():
             older = Transaction(
@@ -119,22 +119,22 @@ class TestGetTransactionsService:
             db.session.add_all([older, newer])
             db.session.commit()
         with app.app_context():
-            txs, _ = get_transactions_service(uid)
+            txs, meta, summary = get_transactions_service(uid)
         assert txs[0]['description'] == 'Newer'
         assert txs[1]['description'] == 'Older'
 
-    def test_limit_restricts_number_of_results(self, app):
-        """Limit parameter caps the returned page size."""
+    def test_per_page_restricts_number_of_results(self, app):
+        """per_page parameter caps the returned page size."""
         uid = _make_user(app, 'gt5')
         for i in range(5):
             _make_transaction(app, uid, f'Tx{i}', -i)
         with app.app_context():
-            txs, total = get_transactions_service(uid, limit=3)
+            txs, meta, summary = get_transactions_service(uid, page=1, per_page=3)
         assert len(txs) == 3
-        assert total == 5  # total counts all rows
+        assert meta['total'] == 5  # total counts all rows, not just this page
 
-    def test_offset_paginates_results(self, app):
-        """Offset skips the specified number of rows."""
+    def test_page_paginates_results_without_overlap(self, app):
+        """Navigating page 1 -> page 2 does not repeat rows."""
         from datetime import datetime, timezone, timedelta
         uid = _make_user(app, 'gt6')
         base = datetime(2024, 1, 1, tzinfo=timezone.utc)
@@ -147,50 +147,70 @@ class TestGetTransactionsService:
                 ))
             db.session.commit()
         with app.app_context():
-            txs_page1, _ = get_transactions_service(uid, limit=2, offset=0)
-            txs_page2, _ = get_transactions_service(uid, limit=2, offset=2)
+            txs_page1, meta_page1, _ = get_transactions_service(uid, page=1, per_page=2)
+            txs_page2, meta_page2, _ = get_transactions_service(uid, page=2, per_page=2)
         # pages must not overlap
         ids_p1 = {t['id'] for t in txs_page1}
         ids_p2 = {t['id'] for t in txs_page2}
         assert ids_p1.isdisjoint(ids_p2)
         assert len(txs_page2) == 2
+        assert meta_page1['has_next'] is True
+        assert meta_page1['has_prev'] is False
+        assert meta_page2['has_next'] is False
+        assert meta_page2['has_prev'] is True
 
-    def test_limit_clamped_to_limit_max(self, app):
-        """Requesting more than LIMIT_MAX rows is silently capped."""
+    def test_per_page_clamped_to_per_page_max(self, app):
+        """Requesting more than PER_PAGE_MAX rows per page is silently capped."""
         uid = _make_user(app, 'gt7')
         for i in range(5):
             _make_transaction(app, uid, f'Tx{i}', -1.0)
         with app.app_context():
-            txs, _ = get_transactions_service(uid, limit=LIMIT_MAX + 999)
-        # We only have 5 rows — the important thing is no error is raised
+            txs, meta, summary = get_transactions_service(uid, page=1, per_page=PER_PAGE_MAX + 999)
+        # We only have 5 rows — the important thing is no error is raised and per_page is capped
         assert len(txs) == 5
+        assert meta['per_page'] == PER_PAGE_MAX
 
-    def test_limit_minimum_is_one(self, app):
-        """Passing limit=0 or negative is clamped to 1."""
+    def test_per_page_minimum_is_one(self, app):
+        """Passing per_page=0 or negative is clamped to 1."""
         uid = _make_user(app, 'gt8')
         _make_transaction(app, uid, 'Tx', -1.0)
         with app.app_context():
-            txs, _ = get_transactions_service(uid, limit=0)
+            txs, meta, summary = get_transactions_service(uid, page=1, per_page=0)
         assert len(txs) == 1
+        assert meta['per_page'] == 1
 
     def test_serialized_shape_contains_expected_keys(self, app):
-        """Each returned transaction dict has the expected keys."""
+        """Each returned transaction dict has exactly the expected keys."""
         uid = _make_user(app, 'gt9')
         _make_transaction(app, uid, 'Market', -20.0)
         with app.app_context():
-            txs, _ = get_transactions_service(uid)
-        keys = set(txs[0].keys())
-        assert {'id', 'description', 'amount', 'category', 'raw_input', 'date'}.issubset(keys)
+            txs, meta, summary = get_transactions_service(uid)
+        assert set(txs[0].keys()) == {'id', 'description', 'amount', 'category', 'raw_input', 'date'}
 
-    def test_total_reflects_full_dataset_regardless_of_limit(self, app):
-        """total always reflects the total row count, not just the current page."""
+    def test_meta_total_reflects_full_dataset_regardless_of_page_size(self, app):
+        """meta.total always reflects the total row count, not just the current page."""
         uid = _make_user(app, 'gt10')
         for i in range(10):
             _make_transaction(app, uid, f'Tx{i}', -1.0)
         with app.app_context():
-            txs, total = get_transactions_service(uid, limit=3, offset=0)
-        assert total == 10
+            txs, meta, summary = get_transactions_service(uid, page=1, per_page=3)
+        assert meta['total'] == 10
         assert len(txs) == 3
+
+    def test_summary_reflects_full_dataset_not_just_current_page(self, app):
+        """summary income/expenses/balance are computed over ALL of the user's
+        transactions, not just the ones on the requested page."""
+        uid = _make_user(app, 'gt11')
+        _make_transaction(app, uid, 'Salary', 1000.0)
+        _make_transaction(app, uid, 'Rent', -400.0)
+        _make_transaction(app, uid, 'Groceries', -100.0)
+        with app.app_context():
+            txs, meta, summary = get_transactions_service(uid, page=1, per_page=1)
+        # Only 1 row comes back on this page, but summary covers all 3.
+        assert len(txs) == 1
+        assert summary['total_income'] == 1000.0
+        assert summary['total_expenses'] == 500.0
+        assert summary['balance'] == 500.0
 
 
 # ---------------------------------------------------------------------------
@@ -280,7 +300,7 @@ class TestCreateTransactionService:
         with patch(N8N_PATCH, return_value=parsed) as mock_n8n:
             with app.app_context():
                 create_transaction_service(uid, '  hello world  ')
-        mock_n8n.assert_called_once_with('hello world')
+        mock_n8n.assert_called_once_with('hello world', None)
 
     def test_transaction_is_persisted_in_db(self, app):
         """After creation the transaction exists in the database."""
