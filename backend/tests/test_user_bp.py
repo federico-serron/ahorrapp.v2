@@ -251,3 +251,45 @@ class TestUpdateMeEndpoint:
         assert 'error' in body
         assert SECRET_MSG not in body['error']
         assert SECRET_MSG not in resp.get_data(as_text=True)
+
+
+class TestLogoutEndpoint:
+
+    def test_reusing_cookie_after_logout_is_rejected(self, client, auth_headers):
+        """T003 (004): a token revoked via logout must be rejected immediately,
+        even though it hasn't naturally expired yet."""
+        logout_resp = client.post('/user/logout', headers=auth_headers)
+        assert logout_resp.status_code == 200
+
+        reused = client.get('/user/me', headers=auth_headers)
+        assert reused.status_code == 401
+
+    def test_logout_does_not_revoke_other_sessions(self, app, sample_user):
+        """Revocation is per-jti, not per-user: a second, separate login session
+        must keep working after the first one logs out.
+
+        Uses two independent test clients (not the shared `client` fixture) so
+        each keeps its own cookie jar — reusing one client for two logins would
+        let its jar silently overwrite the first session's cookie with the
+        second's, which isn't what this test is exercising.
+        """
+        client_a = app.test_client()
+        client_b = app.test_client()
+
+        login_a = client_a.post('/user/login', json={
+            'email': sample_user['email'], 'password': 'password123',
+        })
+        login_b = client_b.post('/user/login', json={
+            'email': sample_user['email'], 'password': 'password123',
+        })
+        assert login_a.status_code == 200
+        assert login_b.status_code == 200
+
+        logout_resp = client_a.post('/user/logout')
+        assert logout_resp.status_code == 200
+
+        revoked = client_a.get('/user/me')
+        assert revoked.status_code == 401
+
+        still_valid = client_b.get('/user/me')
+        assert still_valid.status_code == 200

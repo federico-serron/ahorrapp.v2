@@ -139,9 +139,9 @@ def show_users():
 def logout():
     
     try:
-        #jti = get_jwt()["jti"]
-        #BLACKLIST.add(jti)
-        
+        jti = get_jwt()["jti"]
+        BLACKLIST.add(jti)
+
         resp = jsonify({"msg": "Session ended"})
         unset_jwt_cookies(resp)
         return resp, 200

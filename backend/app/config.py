@@ -23,12 +23,6 @@ class Config:
     
     N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
 
-    PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "client_id")
-    PAYPAL_SECRET = os.getenv("PAYPAL_SECRET", "secret")
-    PAYPAL_API_BASE = os.getenv("PAYPAL_API_BASE", "url_base")
-    PAYPAL_RETURN_URL = os.getenv("PAYPAL_RETURN_URL", "url_return")
-    PAYPAL_CANCEL_URL = os.getenv("PAYPAL_CANCEL_URL", "cancel_url")
-
 class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
     DEBUG = True
