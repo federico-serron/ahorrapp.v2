@@ -47,10 +47,12 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
 
 ## Frontend — Inconsistencias de seguridad
 
-- [ ] **T009** — Eliminar `frontend/src/hooks/useAuthLocalStorage.js` (código muerto que decodifica
+- [x] **T009** — Eliminar `frontend/src/hooks/useAuthLocalStorage.js` (código muerto que decodifica
   JWT desde `localStorage`, viola Principio III/X y no tiene ningún import activo).
-- [ ] **T010** — Confirmar que todo el código usa exclusivamente `frontend/src/hooks/useAuth.js`
+  _Resuelto en `fix/mechanical-bugs-batch1`._
+- [x] **T010** — Confirmar que todo el código usa exclusivamente `frontend/src/hooks/useAuth.js`
   (basado en cookie/store) tras eliminar el duplicado de T009.
+  _Confirmado por grep + tests en `fix/mechanical-bugs-batch1`._
 - [ ] **T011** — Agregar `credentials: "include"` y el header CSRF (`withJsonHeaders(true)`) a
   `createOrderPayPal` y `captureOrderPayPal` en `frontend/src/js/store/flux.js`, para que sigan
   el mismo patrón que el resto de las acciones del store.
