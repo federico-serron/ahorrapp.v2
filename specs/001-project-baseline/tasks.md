@@ -15,12 +15,16 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
   `backend/app/routes/user_bp.py::show_users()`. Hoy cualquier usuario autenticado lista todos
   los usuarios. Viola Principio II.
   _Resuelto en `002-admin-role-check`._
-- [ ] **T003** — Reactivar la revocación de sesión en `backend/app/routes/user_bp.py::logout()`
+- [x] **T003** — Reactivar la revocación de sesión en `backend/app/routes/user_bp.py::logout()`
   (descomentar/usar `BLACKLIST.add(jti)` y verificarlo en el loader de JWT). Hoy un token sigue
   siendo válido tras logout.
-- [ ] **T004** — Proteger `backend/app/routes/paypal_bp.py::create_order()` y `capture_order()`
+  _Resuelto en `004-remove-paypal-cleanup` (conectado a un `@jwt.token_in_blocklist_loader`)._
+- [x] **T004** — Proteger `backend/app/routes/paypal_bp.py::create_order()` y `capture_order()`
   con `@jwt_required` y asociar la orden al `user_id` autenticado en vez de aceptar requests
   anónimos.
+  _Resuelto en `004-remove-paypal-cleanup` — **por eliminación, no por fix**: se confirmó con el
+  usuario que PayPal no se va a usar en la aplicación, así que se borró todo el blueprint en vez
+  de protegerlo._
 
 ## Backend — Fuga de información en errores
 
@@ -37,9 +41,11 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
 
 ## Backend — Funcionalidad a medio terminar
 
-- [ ] **T006** — Conectar `capture_order_service` (PayPal) con el dominio de negocio: crear una
+- [x] **T006** — Conectar `capture_order_service` (PayPal) con el dominio de negocio: crear una
   `Transaction` y/o actualizar `User.is_premium` cuando el pago se confirma. Hoy el pago se cobra
   pero no impacta en los datos del usuario.
+  _Resuelto en `004-remove-paypal-cleanup` — **por eliminación, no por fix** (mismo motivo que
+  T004). `User.is_premium` queda como está, sin ningún flujo que lo actualice todavía._
 - [x] **T007** — Agregar tests unitarios para `backend/app/services/auth_service.py` (create,
   login, edit, update_profile, is_user_admin) siguiendo el patrón de fixtures de
   `backend/tests/conftest.py`. Viola Principio VII (cobertura de tests obligatoria).
@@ -63,9 +69,11 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
 
 ## Frontend — Código huérfano
 
-- [ ] **T012** — Decidir qué hacer con las vistas no enrutadas (`Home.jsx`, `HomeView.jsx`,
+- [x] **T012** — Decidir qué hacer con las vistas no enrutadas (`Home.jsx`, `HomeView.jsx`,
   `ContactView.jsx`, `PaymentMethodsView.jsx`): conectarlas a `Layout.jsx` si van a usarse, o
   eliminarlas si son restos de una iteración anterior.
+  _Resuelto en `004-remove-paypal-cleanup`: se eliminaron las 4 (decisión confirmada con el
+  usuario)._
 
 ## Hallazgos nuevos (detectados al trabajar en los bugs de arriba)
 

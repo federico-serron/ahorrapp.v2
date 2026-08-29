@@ -32,12 +32,12 @@ los que testeaban lo borrado en US2).
 **Independent Test**: login → guardar cookie → logout → reintentar un endpoint protegido con esa
 cookie → `401`.
 
-- [ ] T001 En `backend/app/__init__.py`, registrar `@jwt.token_in_blocklist_loader` sobre la
+- [X] T001 En `backend/app/__init__.py`, registrar `@jwt.token_in_blocklist_loader` sobre la
   instancia `jwt` ya creada: callback `check_if_token_revoked(jwt_header, jwt_payload)` que
   importa `BLACKLIST` de `app.blacklist` y devuelve `jwt_payload["jti"] in BLACKLIST`.
-- [ ] T002 En `backend/app/routes/user_bp.py::logout()`, descomentar/activar
+- [X] T002 En `backend/app/routes/user_bp.py::logout()`, descomentar/activar
   `jti = get_jwt()["jti"]; BLACKLIST.add(jti)` antes de `unset_jwt_cookies`.
-- [ ] T003 [US1] En `backend/tests/test_user_bp.py`, agregar a una clase `TestLogoutEndpoint`
+- [X] T003 [US1] En `backend/tests/test_user_bp.py`, agregar a una clase `TestLogoutEndpoint`
   (nueva): test de que reutilizar la cookie tras logout en `GET /user/me` devuelve `401`; test
   de que una segunda sesión (segundo login) del mismo usuario sigue funcionando después de que la
   primera hace logout (revocación es por `jti`, no por usuario).
@@ -57,37 +57,37 @@ cookie → `401`.
 
 ### Backend
 
-- [ ] T004 [P] [US2] Eliminar `backend/app/routes/paypal_bp.py`.
-- [ ] T005 [P] [US2] Eliminar `backend/app/services/paypal_service.py`.
-- [ ] T006 [P] [US2] Eliminar `backend/tests/test_paypal_bp.py`.
-- [ ] T007 [US2] En `backend/app/__init__.py`, quitar el `import` de `paypal_bp` y su
+- [X] T004 [P] [US2] Eliminar `backend/app/routes/paypal_bp.py`.
+- [X] T005 [P] [US2] Eliminar `backend/app/services/paypal_service.py`.
+- [X] T006 [P] [US2] Eliminar `backend/tests/test_paypal_bp.py`.
+- [X] T007 [US2] En `backend/app/__init__.py`, quitar el `import` de `paypal_bp` y su
   `app.register_blueprint(paypal_bp, url_prefix='/paypal')`. **Nota**: mismo archivo que T001 —
   aplicar en secuencia, no en paralelo con T001.
-- [ ] T008 [US2] En `backend/app/config.py`, quitar de la clase `Config` las 5 líneas
+- [X] T008 [US2] En `backend/app/config.py`, quitar de la clase `Config` las 5 líneas
   `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_API_BASE`, `PAYPAL_RETURN_URL`,
   `PAYPAL_CANCEL_URL`.
-- [ ] T009 [P] [US2] En `backend/.env.example`, quitar el bloque `#PAYPAL` y sus 5 variables.
-- [ ] T010 [P] [US2] En `docker-compose.yml`, quitar las 5 líneas `PAYPAL_*` del bloque
+- [X] T009 [P] [US2] En `backend/.env.example`, quitar el bloque `#PAYPAL` y sus 5 variables.
+- [X] T010 [P] [US2] En `docker-compose.yml`, quitar las 5 líneas `PAYPAL_*` del bloque
   `environment` del servicio `app`.
 
 ### Frontend
 
-- [ ] T011 [P] [US2] Eliminar `frontend/src/views/payment/paypal/` (carpeta completa:
+- [X] T011 [P] [US2] Eliminar `frontend/src/views/payment/paypal/` (carpeta completa:
   `Success.jsx`, `Cancel.jsx`).
-- [ ] T012 [P] [US2] Eliminar `frontend/src/components/payments/PaymentMethods/PayPal/`
+- [X] T012 [P] [US2] Eliminar `frontend/src/components/payments/PaymentMethods/PayPal/`
   (carpeta completa).
-- [ ] T013 [P] [US2] Eliminar `frontend/src/js/store/flux.paypal.test.js`.
-- [ ] T014 [US2] En `frontend/src/js/store/flux.js`, quitar el bloque completo de líneas 431-487:
+- [X] T013 [P] [US2] Eliminar `frontend/src/js/store/flux.paypal.test.js`.
+- [X] T014 [US2] En `frontend/src/js/store/flux.js`, quitar el bloque completo de líneas 431-487:
   incluye tanto el comentario padre `///// PAYMENT METHODS /////` (línea 431, que hoy envuelve
   exclusivamente a PayPal — no hay otro método de pago implementado en este archivo) como el
   comentario interno `/////////////////// PAYPAL /////////////////////` y las funciones
   `createOrderPayPal`/`captureOrderPayPal`. No dejar el header "PAYMENT METHODS" huérfano sin
   contenido debajo.
-- [ ] T015 [US2] En `frontend/src/Layout.jsx`, quitar los imports `PayPalSuccess`/`PayPalCancel`
+- [X] T015 [US2] En `frontend/src/Layout.jsx`, quitar los imports `PayPalSuccess`/`PayPalCancel`
   y las rutas `/paypal/success` y `/paypal/cancel`.
-- [ ] T016 [P] [US2] En `frontend/src/config/paymentMethods.js`, quitar la entrada `PAYPAL` de
+- [X] T016 [P] [US2] En `frontend/src/config/paymentMethods.js`, quitar la entrada `PAYPAL` de
   `PAYMENT_METHODS` (dejar `MERCADOPAGO` y `STRIPE` intactos).
-- [ ] T017 [P] [US2] En `frontend/.env.example`, quitar la línea `VITE_PAYPAL_CLIENT_ID`.
+- [X] T017 [P] [US2] En `frontend/.env.example`, quitar la línea `VITE_PAYPAL_CLIENT_ID`.
 
 **Checkpoint**: `grep -ri paypal backend/app frontend/src` sin resultados; `pytest` backend y
 `npm run build` frontend sin errores.
@@ -102,10 +102,10 @@ cookie → `401`.
 **Independent Test**: `npm run build` compila sin warnings de imports rotos; `/dashboard` sigue
 funcionando igual.
 
-- [ ] T018 [P] [US3] Eliminar `frontend/src/views/Home.jsx`.
-- [ ] T019 [P] [US3] Eliminar `frontend/src/views/HomeView.jsx`.
-- [ ] T020 [P] [US3] Eliminar `frontend/src/views/ContactView.jsx`.
-- [ ] T021 [P] [US3] Eliminar `frontend/src/views/PaymentMethodsView.jsx`. (Nota: es huérfana
+- [X] T018 [P] [US3] Eliminar `frontend/src/views/Home.jsx`.
+- [X] T019 [P] [US3] Eliminar `frontend/src/views/HomeView.jsx`.
+- [X] T020 [P] [US3] Eliminar `frontend/src/views/ContactView.jsx`.
+- [X] T021 [P] [US3] Eliminar `frontend/src/views/PaymentMethodsView.jsx`. (Nota: es huérfana
   independientemente de T012 — no hay dependencia real de orden entre US2 y US3, ver
   `research.md` Decisión 2.)
 
@@ -116,15 +116,15 @@ borrados (confirmar con `grep`).
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T022 Correr `cd backend && venv/Scripts/python.exe -m pytest -q` (sin `--ignore`) y
+- [X] T022 Correr `cd backend && venv/Scripts/python.exe -m pytest -q` (sin `--ignore`) y
   confirmar 100% verde.
-- [ ] T023 [P] Correr `cd frontend && npm run test && npm run build` y confirmar 100% verde, sin
+- [X] T023 [P] Correr `cd frontend && npm run test && npm run build` y confirmar 100% verde, sin
   warnings de imports rotos.
-- [ ] T024 [P] Actualizar `specs/001-project-baseline/tasks.md`: marcar **T003** resuelto (fix
+- [X] T024 [P] Actualizar `specs/001-project-baseline/tasks.md`: marcar **T003** resuelto (fix
   real), y **T004**/**T006**/**T012** resueltos — aclarando que T004/T006 se resolvieron
   **por eliminación de PayPal** (decisión de producto confirmada), no por el fix originalmente
   descripto en esos ítems.
-- [ ] T025 Validación manual según `quickstart.md`: reutilizar cookie tras logout → `401`;
+- [X] T025 Validación manual según `quickstart.md`: reutilizar cookie tras logout → `401`;
   `POST /paypal/create-order` → `404`; navegar `/dashboard` sin regresiones visuales.
 
 ---
