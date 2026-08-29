@@ -35,10 +35,16 @@ Proyecto web existente: `backend/app/...`, `backend/tests/...` (ver `plan.md` �
 - [ ] T001 En `backend/app/routes/user_bp.py::show_users()`, reemplazar el chequeo actual
   (`if current_user_id: ... else: 401`) por: castear `user_id = int(get_jwt_identity())`, llamar
   a `is_user_admin(user_id)` (importar de `app.services.auth_service`), y solo si no levanta
-  excepción armar y devolver el listado (200). Capturar `UnauthorizedError` y `NotFoundError`
-  (ambas ya importadas en el archivo) y devolver `403` con el mensaje genérico definido en
-  `is_user_admin` (ver `contracts/get-user-users.md` y Decisión 3 de `research.md` — ambas
-  excepciones se mapean igual, sin distinguir "no sos admin" de "tu cuenta no existe").
+  excepción armar y devolver el listado (200). Capturar **juntas** `UnauthorizedError` y
+  `NotFoundError` en un único `except (UnauthorizedError, NotFoundError):` y devolver `403` con
+  un mensaje **hardcodeado fijo** (el mismo texto para ambos casos, exactamente el body mostrado
+  en `contracts/get-user-users.md`: `{"error": "Usuario no tiene permisos para acceder"}`).
+  **IMPORTANTE**: NO usar `str(e)` ni reenviar el mensaje propio de cada excepción —
+  `is_user_admin` levanta dos mensajes distintos (`"No existe el usuario con este email"` para
+  `NotFoundError` vs `"Usuario no tiene permisos para acceder"` para `UnauthorizedError`); si se
+  reenvía el mensaje de la excepción tal cual, el body cambia según el caso y filtra si la
+  cuenta existe o no, violando FR-005/SC-003 y el Principio IV de la constitución. Usar un solo
+  string fijo en el `except`, ignorando cuál de las dos excepciones fue la que se disparó.
 
 **Checkpoint**: El endpoint ya distingue admin/no-admin — las user stories de abajo solo agregan
 cobertura de test sobre este cambio.
@@ -54,10 +60,12 @@ debe devolver `200` con la lista completa, igual que antes de esta feature.
 
 ### Tests for User Story 1
 
-- [ ] T002 [P] [US1] Test en `backend/tests/test_user_bp.py`: usuario con `role='admin'`
-  autenticado (fixture nueva o `sample_user` promovido a admin directamente vía `db.session`)
-  obtiene `200` de `GET /user/users` con el listado completo de usuarios, formato sin cambios
-  (mismos campos que `User.serialize()`).
+- [ ] T002 [P] [US1] Test en `backend/tests/test_user_bp.py`: promover `sample_user` a
+  `role='admin'` directamente vía `db.session` (sin fixture nueva), autenticarse con
+  `auth_headers`, y verificar que `GET /user/users` devuelve `200` con el listado completo.
+  Asserta explícitamente que cada item tiene las claves de `User.serialize()`
+  (`id, name, email, role, is_premium, phone, last_login, is_active`) y que **`'password' not in
+  item`** (cubre FR-006 — el listado admin sigue excluyendo la contraseña).
 
 **Checkpoint**: US1 pasa — el camino admin no tiene regresión.
 
@@ -74,8 +82,10 @@ rechazo es dinámico (no depende de un valor cacheado en el token).
 ### Tests for User Story 2
 
 - [ ] T003 [P] [US2] Test en `backend/tests/test_user_bp.py`: usuario autenticado con
-  `role='user'` (default de `sample_user`) recibe `403` de `GET /user/users`, y el body no
-  contiene ninguna lista ni dato de usuarios (solo el mensaje genérico de error).
+  `role='user'` (default de `sample_user`) recibe `403` de `GET /user/users`. Asserta el body
+  **exacto**: `{"error": "Usuario no tiene permisos para acceder"}` — ni una lista, ni ningún
+  dato de usuarios, ni ningún otro texto (cubre SC-001 y SC-003 de forma explícita, no solo
+  indirecta).
 - [ ] T004 [P] [US2] Test en `backend/tests/test_user_bp.py`: request sin cookie de sesión a
   `GET /user/users` sigue devolviendo `401` (regresión del comportamiento preexistente de
   `@jwt_required`, FR-003).
@@ -84,6 +94,13 @@ rechazo es dinámico (no depende de un valor cacheado en el token).
   `role` a `'admin'` directamente vía `db.session` sin volver a loguearse, y repetir
   `GET /user/users` con la misma cookie → ahora debe devolver `200`, confirmando que el chequeo
   se evalúa fresco en cada request y no depende de un valor cacheado en el JWT.
+- [ ] T006 [US2] Test en `backend/tests/test_user_bp.py` (cubre el edge case de spec.md:62-63 y
+  la rama `NotFoundError` de `is_user_admin`): con una cookie de sesión ya emitida para un
+  usuario válido, eliminar esa fila de `User` directamente vía `db.session.delete(user)` +
+  `commit()` (o monkeypatchear `is_user_admin` para simular `NotFoundError`), y repetir
+  `GET /user/users` con la misma cookie → debe devolver `403` con **el mismo body exacto** que
+  T003 (no un mensaje distinto tipo "usuario no encontrado"), confirmando que ambas ramas de
+  rechazo son indistinguibles para el cliente.
 
 **Checkpoint**: US2 pasa — el bug de seguridad original (T002 del baseline) queda cerrado y
 verificado.
@@ -92,9 +109,9 @@ verificado.
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T006 [P] Actualizar `specs/001-project-baseline/tasks.md`: marcar **T002** como resuelto,
+- [ ] T007 [P] Actualizar `specs/001-project-baseline/tasks.md`: marcar **T002** como resuelto,
   referenciando la branch `002-admin-role-check`.
-- [ ] T007 Correr `quickstart.md` de punta a punta (suite de pytest completa
+- [ ] T008 Correr `quickstart.md` de punta a punta (suite de pytest completa
   `--ignore=tests/test_transaction_service.py` + validación manual opcional) y confirmar que
   nada más se rompió.
 
@@ -105,7 +122,7 @@ verificado.
 - **Foundational (Phase 1)**: sin dependencias externas — es el primer paso, bloquea todo lo
   demás.
 - **User Story 1 (Phase 2)** y **User Story 2 (Phase 3)**: ambas dependen únicamente de Phase 1
-  completa. Son independientes entre sí (T002 no depende de T003/T004/T005 ni viceversa) y
+  completa. Son independientes entre sí (T002 no depende de T003/T004/T005/T006 ni viceversa) y
   pueden implementarse/testearse en cualquier orden o en paralelo.
 - **Polish (Phase 4)**: depende de que Phase 2 y Phase 3 estén completas.
 
@@ -116,8 +133,9 @@ verificado.
 Task: "T002 [US1] test admin ve el listado completo"
 Task: "T003 [US2] test no-admin recibe 403 sin datos"
 Task: "T004 [US2] test sin auth sigue en 401"
-# T005 depende conceptualmente del mismo fixture que T003, pero es un archivo/test distinto:
+# T005 y T006 dependen conceptualmente del mismo fixture que T003, pero son tests distintos:
 Task: "T005 [US2] test que el chequeo de rol es fresco, no cacheado"
+Task: "T006 [US2] test que una cuenta borrada recibe el mismo 403 genérico"
 ```
 
 ## Implementation Strategy
