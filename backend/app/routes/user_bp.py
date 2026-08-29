@@ -1,8 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt, set_access_cookies, unset_jwt_cookies
 from app.models import User
 from app import bcrypt, db
-from app.services.auth_service import create_user_service, login_user_service, edit_user_service, update_profile_service
+from app.services.auth_service import create_user_service, login_user_service, edit_user_service, update_profile_service, is_user_admin
 from app.exceptions import NotFoundError, UnauthorizedError, ConflictError, BadRequestError
 from app.blacklist import BLACKLIST
 
@@ -46,8 +46,9 @@ def update_me():
     except NotFoundError as e:
         return jsonify({"error": str(e)}), 404
 
-    except Exception as e:
-        return jsonify({"error": "Error al actualizar el perfil: " + str(e)}), 500
+    except Exception:
+        current_app.logger.exception("Error inesperado actualizando el perfil.")
+        return jsonify({"error": "Error interno del servidor."}), 500
     
 
 @user_bp.route('/signup', methods=['POST'])
@@ -64,8 +65,9 @@ def create_user():
     except BadRequestError as e:
         return jsonify({'error': str(e)}), 400
     
-    except Exception as e:
-        return jsonify({'error': 'Error creating user: ' + str(e)}), 500
+    except Exception:
+        current_app.logger.exception("Error inesperado creando el usuario.")
+        return jsonify({'error': 'Error interno del servidor.'}), 500
 
 
 @user_bp.route('/login', methods=['POST'])
@@ -89,15 +91,16 @@ def login():
     except NotFoundError as e:
         return jsonify({'error': str(e)}), 404
 
-    except Exception as e:
-        return {"error":"Error attempting to log in: " + str(e)}, 500
+    except Exception:
+        current_app.logger.exception("Error inesperado en el login.")
+        return jsonify({"error": "Error interno del servidor."}), 500
     
     
 @user_bp.route('/edit', methods=['PUT'])
 @jwt_required(locations=["cookies"])
 def edit_user():
-    
-    user_id = get_jwt_identity()
+
+    user_id = int(get_jwt_identity())
     
     try:
         data = request.get_json()
@@ -111,22 +114,24 @@ def edit_user():
     except NotFoundError as e:
         return jsonify({'error': str(e)}), 404
 
-    except Exception as e:
-        return {"error":"Error updating your data: " + str(e)}, 500
+    except Exception:
+        current_app.logger.exception("Error inesperado editando el usuario.")
+        return jsonify({"error": "Error interno del servidor."}), 500
     
     
 @user_bp.route('/users')
 @jwt_required(locations=["cookies"])
 def show_users():
-    current_user_id = get_jwt_identity()
-    if current_user_id:
-        users = User.query.all()
-        user_list = []
-        for user in users:
-            user_list.append(user.serialize())
-        return jsonify(user_list), 200
-    else:
-        return {"error": "Invalid or missing token"}, 401
+    user_id = int(get_jwt_identity())
+
+    try:
+        is_user_admin(user_id)
+    except (UnauthorizedError, NotFoundError):
+        return jsonify({"error": "Usuario no tiene permisos para acceder"}), 403
+
+    users = User.query.all()
+    user_list = [user.serialize() for user in users]
+    return jsonify(user_list), 200
     
     
 @user_bp.route("/logout", methods=["POST"])
