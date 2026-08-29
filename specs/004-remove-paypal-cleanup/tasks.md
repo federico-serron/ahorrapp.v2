@@ -77,9 +77,12 @@ cookie → `401`.
 - [ ] T012 [P] [US2] Eliminar `frontend/src/components/payments/PaymentMethods/PayPal/`
   (carpeta completa).
 - [ ] T013 [P] [US2] Eliminar `frontend/src/js/store/flux.paypal.test.js`.
-- [ ] T014 [US2] En `frontend/src/js/store/flux.js`, quitar el bloque completo
-  `/////////////////// PAYPAL /////////////////////` (funciones `createOrderPayPal` y
-  `captureOrderPayPal`).
+- [ ] T014 [US2] En `frontend/src/js/store/flux.js`, quitar el bloque completo de líneas 431-487:
+  incluye tanto el comentario padre `///// PAYMENT METHODS /////` (línea 431, que hoy envuelve
+  exclusivamente a PayPal — no hay otro método de pago implementado en este archivo) como el
+  comentario interno `/////////////////// PAYPAL /////////////////////` y las funciones
+  `createOrderPayPal`/`captureOrderPayPal`. No dejar el header "PAYMENT METHODS" huérfano sin
+  contenido debajo.
 - [ ] T015 [US2] En `frontend/src/Layout.jsx`, quitar los imports `PayPalSuccess`/`PayPalCancel`
   y las rutas `/paypal/success` y `/paypal/cancel`.
 - [ ] T016 [P] [US2] En `frontend/src/config/paymentMethods.js`, quitar la entrada `PAYPAL` de
