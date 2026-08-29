@@ -83,6 +83,27 @@ class TestEditUserEndpoint:
 
 class TestCreateUserEndpoint:
 
+    def test_create_user_returns_201_with_new_user(self, client):
+        """Happy path: valid, unique data creates a user and never returns the password."""
+        resp = client.post('/user/signup', json={
+            'name': 'Brand New User', 'email': 'brand_new_user@test.com', 'password': 'pass1234',
+        })
+
+        assert resp.status_code == 201
+        body = resp.get_json()
+        assert body['msg'] == 'User created successfully!'
+        assert body['user']['email'] == 'brand_new_user@test.com'
+        assert 'password' not in body['user']
+
+    def test_create_user_returns_400_for_duplicate_email(self, client, sample_user):
+        """Signing up twice with the same email is rejected the second time."""
+        resp = client.post('/user/signup', json={
+            'name': 'Duplicate', 'email': sample_user['email'], 'password': 'pass1234',
+        })
+
+        assert resp.status_code == 400
+        assert 'error' in resp.get_json()
+
     def test_create_user_unexpected_error_does_not_leak_details(self, client, monkeypatch):
         """T005: signup's unexpected-exception branch must not leak details."""
         def boom(**kwargs):
@@ -102,6 +123,25 @@ class TestCreateUserEndpoint:
 
 
 class TestLoginEndpoint:
+
+    def test_login_returns_200_and_sets_session_cookie(self, client, sample_user):
+        """Happy path: correct credentials return 200 and set the JWT cookie."""
+        resp = client.post('/user/login', json={
+            'email': sample_user['email'], 'password': 'password123',
+        })
+
+        assert resp.status_code == 200
+        cookies = resp.headers.getlist('Set-Cookie')
+        assert any('access_token_cookie' in c for c in cookies)
+
+    def test_login_returns_400_for_wrong_password(self, client, sample_user):
+        """Wrong password is rejected without revealing which field is wrong."""
+        resp = client.post('/user/login', json={
+            'email': sample_user['email'], 'password': 'wrong-password',
+        })
+
+        assert resp.status_code == 400
+        assert 'error' in resp.get_json()
 
     def test_login_unexpected_error_does_not_leak_details(self, client, monkeypatch):
         """T005: login's unexpected-exception branch must not leak details."""
@@ -181,6 +221,21 @@ class TestShowUsersEndpoint:
 
 
 class TestUpdateMeEndpoint:
+
+    def test_update_me_returns_200_with_valid_name(self, client, auth_headers):
+        """Happy path: a valid name updates the profile."""
+        resp = client.put('/user/me', json={'name': 'Updated Name'}, headers=auth_headers)
+
+        assert resp.status_code == 200
+        body = resp.get_json()
+        assert body['user']['name'] == 'Updated Name'
+
+    def test_update_me_returns_400_for_invalid_name(self, client, auth_headers):
+        """A name with digits is rejected."""
+        resp = client.put('/user/me', json={'name': 'Invalid123'}, headers=auth_headers)
+
+        assert resp.status_code == 400
+        assert 'error' in resp.get_json()
 
     def test_update_me_unexpected_error_does_not_leak_details(self, client, auth_headers, monkeypatch):
         """T005: PUT /user/me's unexpected-exception branch must not leak details."""
