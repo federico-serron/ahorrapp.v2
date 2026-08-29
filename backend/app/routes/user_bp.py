@@ -96,8 +96,8 @@ def login():
 @user_bp.route('/edit', methods=['PUT'])
 @jwt_required(locations=["cookies"])
 def edit_user():
-    
-    user_id = get_jwt_identity()
+
+    user_id = int(get_jwt_identity())
     
     try:
         data = request.get_json()
