@@ -23,7 +23,7 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
 
 ## Backend — Fuga de información en errores
 
-- [ ] **T005** — Reemplazar la interpolación de `str(e)` en la respuesta HTTP por un mensaje
+- [x] **T005** — Reemplazar la interpolación de `str(e)` en la respuesta HTTP por un mensaje
   genérico + logging server-side, en:
   - `backend/app/routes/user_bp.py::create_user()`
   - `backend/app/routes/user_bp.py::login()`
@@ -32,6 +32,7 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
   - `backend/app/routes/paypal_bp.py::create_order()`
   - `backend/app/routes/paypal_bp.py::capture_order()`
   Viola Principio IV (manejo de errores sin fuga de información).
+  _Resuelto en `fix/mechanical-bugs-batch1` (commit `f54074f`)._
 
 ## Backend — Funcionalidad a medio terminar
 
