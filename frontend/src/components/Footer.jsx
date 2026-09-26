@@ -7,13 +7,14 @@ const Footer = () => (
       <div className="sm:flex sm:items-center sm:justify-between">
         <span className="text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2024 <a href="#" className="hover:underline">React/Flask Boilerplate™</a>. Todos los derechos reservados.</span>
         <div className="flex mt-4 sm:justify-center sm:mt-0 items-center space-x-5">
-          <a href="mailto:contacto@boilerplate.com" className="text-gray-500 hover:text-gray-900 dark:hover:text-white">
-            contacto@boilerplate.com
+          <a href="mailto:fede20041@gmail.com" className="text-gray-500 hover:text-gray-900 dark:hover:text-white">
+            fede20041@gmail.com
           </a>
           <a href="#" className="text-gray-500 hover:text-gray-900 dark:hover:text-white">
             <LinkedinIcon className="w-5 h-5" />
             <span className="sr-only">LinkedIn</span>
           </a>
+          <a className="text-gray-500 hover:text-gray-900 dark:hover:text-white">26.9.2026</a>
         </div>
       </div>
     </div>
