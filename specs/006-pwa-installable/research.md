@@ -34,22 +34,62 @@
 
 ## Decisión 3: Cómo se garantiza FR-005 (nunca cachear datos de sesión/financieros)
 
-- **Decision**: **No agregar ninguna regla de `runtimeCaching`** para el origen del backend
-  (`VITE_BACKEND_URL`, ej. `http://localhost:5100` en dev o el dominio de prod). El
-  `generateSW` de Workbox solo intercepta y cachea las requests para las que existe una regla
-  explícita (precache de build, vía `globPatterns`) o una entrada de `runtimeCaching` — todo lo
-  demás (incluidas las llamadas `fetch` a la API con `credentials: "include"`) pasa directo a la
-  red, sin pasar por el Cache Storage del service worker.
-- **Rationale**: Es más seguro por omisión que por exclusión explícita — un `runtimeCaching` mal
-  configurado (ej. un regex que matchea de más) sería el tipo de bug que expondría datos
-  financieros entre sesiones. No escribir ninguna regla para ese origen elimina esa clase de
-  error de raíz, en vez de mitigarla con una lista de exclusión que alguien podría editar mal en
-  el futuro.
+> **Corregido tras `/speckit-analyze` (hallazgo I1).** La versión anterior de esta decisión
+> justificaba la garantía diciendo que el backend vive en "otro origen". **Eso es falso en
+> producción** — ver "Realidad de despliegue" abajo. El resultado (no cachear datos de API) se
+> sostiene igual, pero por un motivo distinto; dejar el motivo equivocado escrito era peligroso
+> porque invitaba a agregar reglas de cache creyéndose protegido por separación de origen.
+
+### Realidad de despliegue (verificada contra el código, no asumida)
+
+- **En dev**: frontend en `:5173` (Vite) y backend en `:5100` (Flask) → **orígenes distintos**.
+- **En producción**: `Dockerfile` construye el frontend y lo copia a
+  `backend/app/front/build`; `backend/app/run.py` define un catch-all `/<path:path>` que sirve
+  esos archivos estáticos, y los blueprints (`/user`, `/transaction`, `/category`, `/public`)
+  viven en **la misma app Flask y el mismo puerto** → **mismo origen**.
+
+Consecuencia: cualquier razonamiento de seguridad basado en "son orígenes distintos" solo vale
+en dev y se cae justo donde importa. La garantía real tiene que ser independiente del origen.
+
+- **Decision**: La garantía de FR-005 se apoya en **dos hechos de configuración**, no en el
+  origen:
+  1. **El precache solo cubre archivos del build**: `workbox.globPatterns` hace glob sobre el
+     directorio de salida (`dist/`), no sobre URLs en runtime. Ninguna response de la API está
+     en `dist/`, así que ninguna puede entrar al precache.
+  2. **No existe ninguna regla de `runtimeCaching`**: `generateSW` solo intercepta y cachea
+     requests que matcheen una ruta registrada (precache o `runtimeCaching`). Sin reglas de
+     runtime, las llamadas `fetch` a la API (con `credentials: "include"`) pasan directo a la
+     red y nunca tocan el Cache Storage.
+- **Rationale**: Ambos hechos se cumplen sin importar si el backend comparte origen o no, que es
+  exactamente la propiedad que necesitamos. Además, es más seguro por **omisión** que por
+  exclusión explícita: no escribir ninguna regla para la API elimina de raíz la clase de bug del
+  regex que matchea de más, en vez de mitigarla con una lista de exclusión que alguien podría
+  editar mal más adelante.
+- **Regla operativa para el futuro**: si algún día se necesita cachear algo de red (ej. Google
+  Fonts), la regla de `runtimeCaching` debe ser **acotada a ese origen/patrón específico**,
+  nunca un catch-all — porque en producción un catch-all incluiría la API de la propia app.
 - **Alternatives considered**: Agregar una regla `runtimeCaching` con `handler: 'NetworkOnly'`
-  explícita para el origen del backend — evaluada pero descartada como *innecesaria*: no cambia
-  el comportamiento (ya es network-only por default), y agrega una superficie de configuración
-  que podría editarse por error hacia un handler de cache real. Se documenta como opción, no se
-  implementa.
+  explícita para las rutas de la API — evaluada y descartada como *innecesaria*: no cambia el
+  comportamiento (ya es network-only por ausencia de reglas) y agrega una superficie de
+  configuración que podría editarse por error hacia un handler de cache real.
+
+## Decisión 3b: `navigateFallbackDenylist` para las rutas del backend (mismo origen)
+
+- **Decision**: Configurar `workbox.navigateFallbackDenylist` con los prefijos de los blueprints
+  reales del backend: `/user`, `/transaction`, `/category`, `/public`.
+- **Rationale**: Con `generateSW` en una SPA, el plugin configura `navigateFallback` hacia
+  `index.html` para que cualquier ruta del router se resuelva offline. Como en producción el
+  backend comparte origen (ver arriba), **sin denylist una navegación directa a una ruta de la
+  API sería respondida por el service worker con el shell del SPA en lugar de llegar a Flask**.
+  Las llamadas `fetch` de `flux.js` no se ven afectadas (no son navigation requests), pero sí
+  cualquier acceso directo por barra de direcciones, redirect o link externo a una ruta del
+  backend.
+- **Por qué es fácil que se escape**: este fallo **no se reproduce en dev**, donde frontend y
+  backend están en puertos distintos y el service worker del frontend jamás ve esas URLs. Solo
+  aparece en el build de producción — el peor momento para descubrirlo.
+- **Alternatives considered**: Mover la API a un subdominio propio en producción para recuperar
+  la separación de origen — descartado: es un cambio de infraestructura y despliegue que excede
+  esta feature, y el Principio IX pide no agrandar la superficie sin necesidad.
 
 ## Decisión 4: Metadatos mínimos para instalabilidad real en iOS y Android
 

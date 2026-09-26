@@ -50,6 +50,24 @@
    (`VITE_BACKEND_URL`) — solo deben aparecer archivos estáticos del propio frontend
    (`index.html`, JS, CSS, íconos, fuentes).
 
+## Verificación en producción (mismo origen) — NO se puede hacer con `npm run preview`
+
+> **Por qué existe esta sección**: en dev, frontend (`:5173`) y backend (`:5100`) son orígenes
+> distintos, así que el service worker del frontend nunca ve las URLs de la API. En producción
+> **comparten origen** (un solo contenedor Flask sirve el SPA y la API). Todo lo que dependa de
+> esa diferencia solo se puede validar en un build de producción real.
+
+1. Construir y servir como en producción: levantar la imagen Docker, o copiar el resultado de
+   `npm run build` a `backend/app/front/build` y arrancar Flask (`python -m app.run`), de modo
+   que **un mismo origen** sirva el SPA y la API.
+2. Abrir la app, dejar que el service worker se registre, y confirmar la sección "Verificación
+   de FR-005" de arriba en este entorno (no solo en dev).
+3. **Probar la denylist**: navegar **directamente por la barra de direcciones** a una ruta del
+   backend, por ejemplo `/public/about`. Debe responder Flask (JSON), **no** el shell HTML del
+   SPA. Si devuelve el HTML de la app, `navigateFallbackDenylist` está mal configurado o falta.
+4. Repetir el paso 3 estando offline: debe fallar como una request de red normal, sin que el
+   service worker sustituya la respuesta por el shell.
+
 ## Regresión (SC-005)
 
 ```bash

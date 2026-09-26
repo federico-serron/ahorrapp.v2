@@ -36,11 +36,18 @@ fallback — mismo frontend, sin build separado por plataforma
 **Performance Goals**: El bundle del service worker no debe añadir una regresión perceptible al
 tiempo de carga inicial (Workbox es liviano, <5kb gzip para el runtime base)
 
-**Constraints**: FR-005 es la restricción dura de este plan — el service worker NO debe
-cachear ninguna response de `VITE_BACKEND_URL` (otro origen: `localhost:5100` en dev, dominio de
-prod). Se logra por **omisión deliberada**: no se define ningún `runtimeCaching` para ese origen,
-así que Workbox nunca los intercepta ni cachea — no hace falta una regla de exclusión explícita,
-alcanza con no agregar una de inclusión.
+**Constraints**: FR-005 es la restricción dura de este plan — el service worker NO debe cachear
+ninguna response de la API. **Importante (corregido tras `/speckit-analyze`)**: en producción el
+backend **comparte origen** con el frontend (un solo contenedor Flask sirve el SPA vía el
+catch-all de `run.py` y los blueprints de la API en el mismo puerto); solo en dev son orígenes
+distintos (`:5173` vs `:5100`). Por eso la garantía **no** puede apoyarse en separación de
+origen, sino en dos hechos de configuración válidos en ambos entornos: (1) `globPatterns` hace
+glob sobre `dist/`, donde ninguna response de API existe; (2) no se define ninguna regla de
+`runtimeCaching`, así que Workbox nunca intercepta esas requests. Ver `research.md` Decisión 3.
+
+Corolario del mismo origen: hace falta `navigateFallbackDenylist` para los prefijos de la API,
+o el service worker respondería con el shell del SPA a navegaciones directas a rutas del backend
+(ver `research.md` Decisión 3b). Este fallo **no se reproduce en dev**.
 
 **Scale/Scope**: Cambios en `frontend/vite.config.js`, `frontend/index.html`, nuevos assets de
 íconos en `frontend/public/`, un componente chico de aviso de actualización/offline en React.

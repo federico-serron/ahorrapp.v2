@@ -33,6 +33,18 @@ Todos generados a partir de `frontend/public/ahorrapp.png` (fuente ya existente 
 <meta name="theme-color" content="#030712">
 ```
 
+## Acoplamiento con `VITE_BASENAME` (a tener en cuenta si cambia el despliegue)
+
+`start_url: "/dashboard"` y el `scope` implícito (`/`) asumen que la app se sirve desde la raíz
+del dominio. El router usa `basename = import.meta.env.VITE_BASENAME || ""`
+(`frontend/src/Layout.jsx`), y hoy `frontend/.env.example` trae `VITE_BASENAME=/`, así que
+coinciden.
+
+Si en algún despliegue futuro la app pasa a servirse bajo un subpath (ej. `/app`), hay que
+actualizar **los tres a la vez**: `VITE_BASENAME`, el `start_url` y el `scope` del manifest —
+si quedan desalineados, la app instalada abriría una URL fuera de su propio scope y el navegador
+la trataría como navegación externa (saliendo del modo standalone).
+
 ## Lo que el manifest explícitamente NO incluye
 
 - `share_target`, `shortcuts`, `protocol_handlers` — no pedidos, fuera de alcance.
