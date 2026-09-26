@@ -4,8 +4,6 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Dashboard from './views/dashboard/Dashboard';
 import injectContext from './js/store/appContext.jsx';
 import NotFound from './views/NotFound.jsx';
-import PayPalSuccess from './views/payment/paypal/Success';
-import PayPalCancel from './views/payment/paypal/Cancel';
 import './index.css';
 
 const Layout = () => {
@@ -17,8 +15,6 @@ const Layout = () => {
         <Routes>
           <Route path='/' element={<Navigate to="/dashboard" replace />} />
           <Route path='/dashboard' element={<Dashboard />} />
-          <Route path="/paypal/success" element={<PayPalSuccess />} />
-          <Route path="/paypal/cancel" element={<PayPalCancel />} />
           <Route path='*' element={<NotFound />} />
         </Routes>
       </BrowserRouter>

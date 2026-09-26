@@ -33,6 +33,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 			categories_loaded: false,
 			analytics: null,
 			analytics_loaded: false,
+			line_analytics: null,
+			line_analytics_loaded: false,
 		},
 		actions: {
 
@@ -293,6 +295,24 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 			},
 
+			getLineAnalytics: async (startDate, endDate) => {
+				setStore({ ...getStore(), line_analytics_loaded: false });
+				try {
+					const resp = await fetch(`${backendUrl}/transaction/analytics?start_date=${startDate}&end_date=${endDate}`, {
+						method: "GET",
+						headers: { "Content-type": "application/json" },
+						credentials: "include",
+					});
+					if (!resp.ok) throw new Error("Error al cargar analíticas.");
+					const data = await resp.json();
+					setStore({ ...getStore(), line_analytics: data, line_analytics_loaded: true });
+					return data;
+				} catch (error) {
+					setStore({ ...getStore(), error: error.message, line_analytics_loaded: true });
+					return null;
+				}
+			},
+
 		///////////////////////////////////////////////// CATEGORIES /////////////////////////////////////////////////////////////////
 
 			getCategories: async () => {
@@ -405,66 +425,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 				} catch (error) {
 					setStore({ ...store, error: error.message });
 					return false;
-				}
-			},
-
-		///////////////////////////////////////////////// PAYMENT METHODS /////////////////////////////////////////////////////////////////
-
-			/////////////////// PAYPAL /////////////////////////
-			createOrderPayPal: async (amount) => {
-				const URLcreateOrder = `${backendUrl}/paypal/create-order`;
-				const store = getStore()
-
-				try {
-					const response = await fetch(URLcreateOrder, {
-						method: "POST",
-						body: JSON.stringify({ amount: amount }),
-						headers: {
-							"Content-type": "application/json; charset=UTF-8"
-						}
-					})
-
-					const data = await response.json()
-					const approvalUrl = data.links.find((link) => link.rel === "approve")?.href;
-
-					if (approvalUrl) {
-						return approvalUrl;
-					} else {
-						throw new Error(data.error);
-					}
-
-				} catch (error) {
-					setStore({ ...store, error: error.message })
-					console.error(store.error)
-					return false
-				}
-			},
-
-			captureOrderPayPal: async (token) => {
-				const URLcaptureOrder = `${backendUrl}/paypal/capture-order`;
-				const store = getStore()
-
-				try {
-				const response = await fetch(URLcaptureOrder, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({ order_id: token }),
-
-				});
-
-				const data = await response.json();
-
-				if (data.status === "COMPLETED") {
-					return data;
-				}else{
-					throw new Error(data.error);
-				}
-
-				} catch (error) {
-					setStore({ ...store, error: error.message })
-					return false
 				}
 			},
 
