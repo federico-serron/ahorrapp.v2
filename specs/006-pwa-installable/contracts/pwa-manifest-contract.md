@@ -24,7 +24,30 @@ concreto a implementar.
 | `maskable-icon-512x512.png` | 512×512 | `maskable` | Versión con padding de seguridad para que Android recorte la forma (círculo, squircle, etc.) sin cortar el logo |
 | `apple-touch-icon.png` | 180×180 | (no aplica `purpose`, es un `<link>` en `index.html`, no una entrada del manifest) | Ícono usado por iOS al agregar a pantalla de inicio |
 
-Todos generados a partir de `frontend/public/ahorrapp.png` (fuente ya existente en el repo).
+### Fuente y generación (actualizado durante la implementación)
+
+La suposición original —generarlos desde `frontend/public/ahorrapp.png`— **no era viable**: ese
+archivo es de 32×27 px (un favicon) y además no es cuadrado; escalarlo habría dado un ícono
+borroso y deformado.
+
+Fuente real: **`frontend/design/logotipo_sin_texto.png`** (1024×1024, RGBA, fondo transparente,
+trazo `#2B9B83`). Vive en `design/` y **no** en `public/` a propósito: todo lo que está en
+`public/` se copia a `dist/` y lo precachea el service worker — tener ahí el fuente de 1.4 MB
+hacía que cada usuario lo descargara sin que nada lo referenciara (el precache pasaba de 958 KiB
+a 2.3 MB).
+
+Parámetros usados por destino (el logo se recorta primero con `trim()` para eliminar el margen
+transparente del canvas original y así controlar el padding de cada salida):
+
+| Destino | Canvas | Logo | Fondo | Motivo |
+|---|---|---|---|---|
+| `pwa-192x192.png` | 192 | 92% | transparente | `purpose: any` — el launcher decide cómo componerlo |
+| `pwa-512x512.png` | 512 | 92% | transparente | idem, mayor resolución |
+| `maskable-icon-512x512.png` | 512 | **62%** | blanco opaco | Android recorta a formas arbitrarias: el logo debe entrar en la safe zone (círculo del 80%) y el fondo debe llenar todo el canvas |
+| `apple-touch-icon.png` | 180 | 80% | blanco opaco | iOS **ignora el canal alfa**: sin aplanar, el logo saldría compuesto sobre negro |
+
+Para regenerarlos si cambia el logo: instalar `sharp` de forma temporal (`npm i -D sharp
+--no-save`, no debe quedar como dependencia del proyecto) y repetir esos parámetros.
 
 ## Meta tags adicionales en `index.html` (fuera del manifest, requeridos por iOS)
 

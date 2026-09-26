@@ -31,9 +31,9 @@ Foundational + US1/US2 ya generen el service worker correctamente.
 
 ## Phase 1: Setup
 
-- [ ] T001 En `frontend/`, correr `npm install -D vite-plugin-pwa` (agrega la dependencia de
+- [X] T001 En `frontend/`, correr `npm install -D vite-plugin-pwa` (agrega la dependencia de
   build; no es runtime pesado, ver `research.md` Decisión 1).
-- [ ] T002 Generar los 4 íconos requeridos a partir de `frontend/public/ahorrapp.png` (ver
+- [X] T002 Generar los 4 íconos requeridos a partir de `frontend/public/ahorrapp.png` (ver
   `contracts/pwa-manifest-contract.md` → tabla de íconos) y guardarlos en `frontend/public/`:
   `pwa-192x192.png`, `pwa-512x512.png`, `maskable-icon-512x512.png` (con padding de seguridad
   para maskable, no el logo a sangre), `apple-touch-icon.png` (180×180, sin transparencia — iOS
@@ -48,22 +48,22 @@ Foundational + US1/US2 ya generen el service worker correctamente.
 **Purpose**: Configurar el plugin con el manifest y la estrategia de cache — sin esto, ninguna
 user story es verificable.
 
-- [ ] T003 En `frontend/vite.config.js`, importar `VitePWA` de `vite-plugin-pwa` y agregarlo a
+- [X] T003 En `frontend/vite.config.js`, importar `VitePWA` de `vite-plugin-pwa` y agregarlo a
   `plugins`, con `registerType: 'autoUpdate'` y `strategy: 'generateSW'` (default explícito, ver
   `research.md` Decisión 2).
-- [ ] T004 En el mismo bloque de config de T003, definir `manifest` con exactamente los campos
+- [X] T004 En el mismo bloque de config de T003, definir `manifest` con exactamente los campos
   de `contracts/pwa-manifest-contract.md`: `name`, `short_name`, `description`, `start_url:
   "/dashboard"`, `display: "standalone"`, `theme_color: "#030712"`, `background_color:
   "#ffffff"`, e `icons` (las 3 entradas del manifest — `apple-touch-icon.png` NO va acá, es un
   `<link>` de HTML, ver T007).
-- [ ] T005 En el mismo bloque, definir `workbox.globPatterns` para precachear los assets del
+- [X] T005 En el mismo bloque, definir `workbox.globPatterns` para precachear los assets del
   build (`**/*.{js,css,html,ico,png,svg,webmanifest}`). **NO agregar ninguna entrada de
   `runtimeCaching`** — la ausencia deliberada de reglas es lo que garantiza FR-005 junto con el
   hecho de que `globPatterns` solo globea `dist/` (ver `research.md` Decisión 3). Si en el
   futuro se necesita cachear algo de red (ej. Google Fonts), la regla debe ser **acotada a ese
   origen/patrón específico, nunca un catch-all** — en producción un catch-all incluiría la API
   de la propia app, porque comparte origen.
-- [ ] T006 En el mismo bloque, definir `workbox.navigateFallbackDenylist` con los prefijos de
+- [X] T006 En el mismo bloque, definir `workbox.navigateFallbackDenylist` con los prefijos de
   los blueprints reales del backend: `[/^\/user/, /^\/transaction/, /^\/category/, /^\/public/]`
   (ver `research.md` Decisión 3b). **Motivo**: en producción el backend comparte origen con el
   frontend (un solo contenedor Flask sirve ambos), así que sin esta denylist el service worker
@@ -71,7 +71,7 @@ user story es verificable.
   **Atención**: este fallo **no se reproduce en dev** (ahí los puertos son distintos), así que
   no confiar en la prueba local para validar esta tarea — se valida en el build de producción
   (T016).
-- [ ] T007 En `frontend/index.html`, agregar dentro de `<head>`: `<link rel="apple-touch-icon"
+- [X] T007 En `frontend/index.html`, agregar dentro de `<head>`: `<link rel="apple-touch-icon"
   href="/apple-touch-icon.png" sizes="180x180">` y `<meta name="theme-color" content="#030712">`
   (ver `research.md` Decisión 4 — necesarios para iOS, que no los toma del manifest).
 
@@ -122,14 +122,14 @@ conexión; los datos que requieren red muestran un aviso claro, no una pantalla 
 
 **Independent Test**: ver `quickstart.md` sección "US3 — Shell offline".
 
-- [ ] T011 [US3] Crear `frontend/src/components/PwaUpdatePrompt.jsx`: usa el hook
+- [X] T011 [US3] Crear `frontend/src/components/PwaUpdatePrompt.jsx`: usa el hook
   `useRegisterSW` del módulo virtual `virtual:pwa-register/react` (ver `research.md` Decisión 5)
   para mostrar, vía `react-hot-toast` (ya en el proyecto), un aviso cuando `offlineReady` se
   vuelve `true` ("App lista para funcionar sin conexión") y otro cuando `needRefresh` se vuelve
   `true` ("Hay una versión nueva disponible", con acción para actualizar).
-- [ ] T012 [US3] Montar `<PwaUpdatePrompt />` una vez en `frontend/src/Layout.jsx` (junto al
+- [X] T012 [US3] Montar `<PwaUpdatePrompt />` una vez en `frontend/src/Layout.jsx` (junto al
   `<Toaster />` ya existente).
-- [ ] T013 [US3] Cubrir FR-006 en los **flujos de lectura**, que hoy no tienen aviso de error.
+- [X] T013 [US3] Cubrir FR-006 en los **flujos de lectura**, que hoy no tienen aviso de error.
   Estado verificado del código: las acciones **mutantes** ya toastean `store.error`
   (`CategoriesPanel.jsx`, `TransactionsList.jsx`, `Dashboard.jsx`, `LoginModal.jsx`,
   `SignupModal.jsx`), pero las acciones de **lectura** de `frontend/src/js/store/flux.js` —
@@ -147,9 +147,9 @@ ambas.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T014 [P] Correr `cd backend && venv/Scripts/python.exe -m pytest -q` y confirmar que sigue
+- [X] T014 [P] Correr `cd backend && venv/Scripts/python.exe -m pytest -q` y confirmar que sigue
   en verde (SC-005 — esta feature no debería tocar el backend en absoluto).
-- [ ] T015 [P] Correr `cd frontend && npm run test && npm run build` y confirmar que sigue en
+- [X] T015 [P] Correr `cd frontend && npm run test && npm run build` y confirmar que sigue en
   verde.
 - [ ] T016 Validar en un **build de producción servido por Flask** (no `npm run preview`, que no
   reproduce el mismo origen): levantar la imagen Docker o servir `dist/` desde
@@ -161,7 +161,7 @@ ambas.
   Application → Service Workers, marcar "Bypass for network" (o usar un perfil con service
   workers deshabilitados) y confirmar que la app sigue cargando y funcionando como web app
   normal, sin errores en consola por el registro fallido del service worker.
-- [ ] T018 [P] Documentar en el commit que esta feature implementa el Principio VIII de la
+- [X] T018 [P] Documentar en el commit que esta feature implementa el Principio VIII de la
   constitución. No hay ninguna tarea de `specs/001-project-baseline/tasks.md` que marcar — esta
   feature no proviene de un hallazgo del baseline (que está 13/13 completo), sino que es una
   feature de producto nueva.
