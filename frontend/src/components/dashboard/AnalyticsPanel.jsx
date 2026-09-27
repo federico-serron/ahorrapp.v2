@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { Context } from '../../js/store/appContext';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -80,8 +81,24 @@ export default function AnalyticsPanel() {
   // Carga inicial
   useEffect(() => {
     const { start, end } = monthToRange(currentYearMonth());
-    actions.getLineAnalytics(start, end);
-    actions.getAnalytics(start, end);
+
+    const loadAnalytics = async () => {
+      // Devuelven null si la request falló; sin aviso los gráficos quedarían
+      // vacíos sin explicación (FR-006 de specs/006-pwa-installable).
+      const results = await Promise.all([
+        actions.getLineAnalytics(start, end),
+        actions.getAnalytics(start, end),
+      ]);
+      if (results.some((result) => result === null)) {
+        toast.error(
+          navigator.onLine
+            ? 'No pudimos cargar las analíticas. Reintentá en un momento.'
+            : 'Sin conexión: no pudimos cargar tus analíticas.',
+        );
+      }
+    };
+
+    loadAnalytics();
   }, []);
 
   const handleApplyLine = () => {
