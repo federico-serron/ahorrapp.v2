@@ -125,6 +125,13 @@ export default function Dashboard() {
               <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
                 <CategoriesPanel />
               </div>
+              {/* Versión de la app (fecha del build, inyectada en vite.config.js).
+                  Va acá y no en el sidebar para que no esté siempre en pantalla:
+                  solo se ve si el usuario entra a Configuración, que es donde se
+                  la busca cuando hace falta. */}
+              <p className="pt-2 text-center text-[10px] tracking-wide text-gray-300 dark:text-gray-700 select-none">
+                v{import.meta.env.VITE_APP_VERSION}
+              </p>
             </div>
           )}
 

@@ -59,10 +59,6 @@ const Sidebar = ({ isSidebarOpen, activeTab, setActiveTab }) => {
           <FiLogOut className="w-4 h-4 flex-shrink-0" />
           Cerrar sesión
         </button>
-        {/* Versión de la app: fecha del build, inyectada en vite.config.js */}
-        <p className="mt-3 text-center text-[10px] tracking-wide text-gray-300 dark:text-gray-700 select-none">
-          v{import.meta.env.VITE_APP_VERSION}
-        </p>
       </div>
     </aside>
   );
