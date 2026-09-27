@@ -1,3 +1,18 @@
+import os
+
+# CRÍTICO: create_app() elige la Config según FLASK_ENV y Flask-SQLAlchemy crea el
+# engine dentro de db.init_app(app). Para cuando la fixture recibe la app, el engine
+# ya está atado a esa base: sobrescribir SQLALCHEMY_DATABASE_URI después NO tiene
+# efecto. Como la fixture `db` termina con drop_all(), apuntar sin querer a la base
+# de desarrollo hacía que cada corrida de pytest la vaciara (pasó de verdad: las
+# tablas user/transaction/category desaparecieron de Postgres y hubo que
+# reconstruirlas con `flask db stamp base && flask db upgrade`).
+#
+# Por eso el entorno se fija ANTES de importar/crear la app. load_dotenv() no pisa
+# variables ya presentes en os.environ, así que esto le gana al FLASK_ENV del .env
+# y create_app() carga TestingConfig -> sqlite:///:memory:.
+os.environ['FLASK_ENV'] = 'testing'
+
 import pytest
 from app import create_app, db as _db
 from app.models import User, Category, Transaction
@@ -8,8 +23,17 @@ from flask_bcrypt import Bcrypt
 def app():
     """Crea la aplicación Flask con configuración de testing (SQLite en memoria)."""
     app = create_app()
+
+    # Red de seguridad: si por lo que sea la app quedó apuntando a una base que no
+    # es SQLite en memoria, abortamos antes de que create_all()/drop_all() toquen
+    # datos reales.
+    uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    assert uri == 'sqlite:///:memory:', (
+        f"Los tests deben correr contra SQLite en memoria, no contra {uri!r}. "
+        "La fixture `db` hace drop_all() al terminar y borraría esa base."
+    )
+
     app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['JWT_SECRET_KEY'] = 'testing-secret'
     app.config['JWT_COOKIE_SECURE'] = False
     app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'headers']

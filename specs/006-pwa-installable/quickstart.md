@@ -12,8 +12,11 @@
 1. Abrir la app servida (build de producción) en Chrome de escritorio o Android.
 2. DevTools → pestaña **Application** → **Manifest**: confirmar que carga sin errores y muestra
    nombre, íconos y `display: standalone` según `contracts/pwa-manifest-contract.md`.
-3. DevTools → **Lighthouse** → categoría PWA → correr auditoría → debe pasar el criterio de
-   instalabilidad ("Web app manifest meets the installability requirements").
+3. DevTools → **Application** → **Manifest** → sección *Installability*: sin advertencias, y el
+   ícono de instalar visible en la barra de direcciones.
+   > No usar Lighthouse para esto: **la categoría PWA fue eliminada** (verificado contra un
+   > reporte real de Lighthouse 13.4.1 sobre esta app — no trae ninguna auditoría de PWA). Solo
+   > quedan performance, accessibility, best-practices y seo.
 4. En un Android real (o emulado): confirmar que Chrome ofrece el banner/menú "Instalar app" o
    "Agregar a pantalla de inicio", y que el resultado tiene el ícono correcto.
 

@@ -88,9 +88,16 @@ inicio" con ícono y nombre correctos.
 **Independent Test**: ver `quickstart.md` secciones "US1 — Instalabilidad (Android/Chrome)" y
 "US1 — Instalabilidad (iOS/Safari)".
 
-- [ ] T008 [US1] Ejecutar `npm run build && npm run preview` y correr una auditoría Lighthouse →
-  PWA en el resultado — debe pasar el criterio de instalabilidad. Si falla, revisar contra
-  `contracts/pwa-manifest-contract.md` cuál campo falta o está mal.
+- [ ] T008 [US1] Verificar instalabilidad en DevTools → **Application → Manifest**: sin errores,
+  los 3 íconos renderizan, `start_url: /dashboard`, `display: standalone`, y la sección
+  *Installability* sin advertencias. Además debe aparecer el ícono de instalar en la barra de
+  direcciones.
+  > **Corregido durante la implementación**: la redacción original decía "correr Lighthouse →
+  > categoría PWA". Esa categoría **ya no existe**: se verificó contra un reporte real de
+  > Lighthouse 13.4.1 sobre esta misma app y no trae ninguna auditoría de PWA
+  > (`installable-manifest`, `maskable-icon`, `splash-screen`, etc. — cero coincidencias); solo
+  > quedan performance, accessibility, best-practices y seo. El panel Application → Manifest es
+  > la verificación confiable e independiente de la versión de Chrome.
 - [ ] T009 [US1] Validación manual en un dispositivo Android real (o emulado) y un iPhone real:
   confirmar que el ícono y nombre mostrados durante la instalación coinciden con los de
   `contracts/pwa-manifest-contract.md` (no el favicon genérico de Vite).

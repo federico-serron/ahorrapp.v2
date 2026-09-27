@@ -1,6 +1,8 @@
 # === PYTHON / FLASK ===
 backend/venv/
 backend/instance/
+# Build del frontend copiado por el Dockerfile (o a mano para probar prod local)
+backend/app/front/
 __pycache__/
 *.pyc
 *.pyo
@@ -49,3 +51,4 @@ Thumbs.db
 CLAUDE.md
 .claude/
 skills-lock.json
+lighthouse-report.json
