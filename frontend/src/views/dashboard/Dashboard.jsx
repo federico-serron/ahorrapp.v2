@@ -33,10 +33,28 @@ export default function Dashboard() {
 
   // Cargar datos cuando el usuario esté autenticado
   useEffect(() => {
-    if (isAuthenticated) {
-      if (!store.transactions_loaded) actions.getTransactions();
-      if (!store.categories_loaded) actions.getCategories();
-    }
+    if (!isAuthenticated) return;
+
+    const loadData = async () => {
+      const pending = [];
+      if (!store.transactions_loaded) pending.push(actions.getTransactions());
+      if (!store.categories_loaded) pending.push(actions.getCategories());
+      if (pending.length === 0) return;
+
+      // Las acciones de lectura devuelven null si la request falló. Sin este
+      // aviso, offline el dashboard renderiza listas vacías y totales en cero
+      // sin decir por qué (FR-006 de specs/006-pwa-installable).
+      const results = await Promise.all(pending);
+      if (results.some((result) => result === null)) {
+        toast.error(
+          navigator.onLine
+            ? 'No pudimos cargar tus datos. Reintentá en un momento.'
+            : 'Sin conexión: no pudimos cargar tus datos actualizados.',
+        );
+      }
+    };
+
+    loadData();
   }, [isAuthenticated]);
 
   const handleTransactionSubmit = async (e) => {
@@ -107,6 +125,13 @@ export default function Dashboard() {
               <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
                 <CategoriesPanel />
               </div>
+              {/* Versión de la app (fecha del build, inyectada en vite.config.js).
+                  Va acá y no en el sidebar para que no esté siempre en pantalla:
+                  solo se ve si el usuario entra a Configuración, que es donde se
+                  la busca cuando hace falta. */}
+              <p className="pt-2 text-center text-[10px] tracking-wide text-gray-300 dark:text-gray-700 select-none">
+                v{import.meta.env.VITE_APP_VERSION}
+              </p>
             </div>
           )}
 

@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Dashboard from './views/dashboard/Dashboard';
 import injectContext from './js/store/appContext.jsx';
 import NotFound from './views/NotFound.jsx';
+import PwaUpdatePrompt from './components/PwaUpdatePrompt.jsx';
 import './index.css';
 
 const Layout = () => {
@@ -27,6 +28,7 @@ const Layout = () => {
           },
         }}
       />
+      <PwaUpdatePrompt />
     </div>
   );
 };

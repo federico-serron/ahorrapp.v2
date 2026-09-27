@@ -88,6 +88,20 @@ tracking simple de correcciones pendientes sobre el baseline relevado.
   que faltaba el segundo argumento de `parse_transaction_via_n8n`), oculta hasta ahora porque el
   archivo ni siquiera colectaba.
 
+- [x] **T014** — `backend/tests/conftest.py` hacía que **toda la suite corriera contra la base de
+  desarrollo real** y la vaciara al terminar. La fixture `app` sobrescribía
+  `SQLALCHEMY_DATABASE_URI` *después* de `create_app()`, pero Flask-SQLAlchemy crea el engine
+  dentro de `db.init_app(app)` — para ese momento ya estaba atado a Postgres, así que el override
+  no tenía efecto. Combinado con el `drop_all()` de la fixture `db`, cada `pytest` borraba
+  `user`, `transaction` y `category` de Postgres (`alembic_version` sobrevivía por no estar en el
+  metadata, dejando a Alembic diciendo "head" sobre una base vacía).
+  Detectado el 2026-09-27 al no poder loguearse para probar la PWA: el 500 era
+  `UndefinedTable: relation "user" does not exist`. Confirmado imprimiendo `db.engine.url` con la
+  config de la fixture (devolvía `postgresql://...`, no SQLite).
+  _Resuelto en `006-pwa-installable`_: se fija `FLASK_ENV=testing` **antes** de crear la app (así
+  `create_app()` carga `TestingConfig` → `sqlite:///:memory:`) más un `assert` que aborta la
+  corrida si la URI no es SQLite. Base restaurada con `flask db stamp base && flask db upgrade`.
+
 ## Notas de priorización sugerida
 
 1. **Crítico (seguridad)**: T002, T004, T003, T001
