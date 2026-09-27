@@ -2,8 +2,20 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Versión de la app = fecha del build en formato D.M.AAAA (ej. 27.9.2026).
+// Se calcula acá y no se hardcodea en el componente para que cada deploy muestre
+// su propia fecha solo; hardcodeada quedaría congelada y mentiría al día siguiente.
+const buildDate = new Date()
+const APP_VERSION = `${buildDate.getDate()}.${buildDate.getMonth() + 1}.${buildDate.getFullYear()}`
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    // Vía import.meta.env para seguir el patrón que ya usa el proyecto
+    // (VITE_BACKEND_URL, VITE_BASENAME) y evitar una global suelta que ESLint
+    // marcaría como no-undef.
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(APP_VERSION),
+  },
   plugins: [
     react(),
     VitePWA({

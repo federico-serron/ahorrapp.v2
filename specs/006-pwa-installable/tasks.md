@@ -166,13 +166,13 @@ ambas.
   en verde (SC-005 — esta feature no debería tocar el backend en absoluto).
 - [X] T015 [P] Correr `cd frontend && npm run test && npm run build` y confirmar que sigue en
   verde.
-- [ ] T016 Validar en un **build de producción servido por Flask** (no `npm run preview`, que no
+- [X] T016 Validar en un **build de producción servido por Flask** (no `npm run preview`, que no
   reproduce el mismo origen): levantar la imagen Docker o servir `dist/` desde
   `backend/app/front/build`, y confirmar (a) la sección "Verificación de FR-005" de
   `quickstart.md` — ninguna entrada de la API en Cache Storage — y (b) que una navegación
   directa a una ruta del backend (ej. `/public/about`) llega a Flask y **no** devuelve el shell
   del SPA, es decir que la denylist de T006 funciona.
-- [ ] T017 [P] Verificar FR-007 (degradación en navegadores sin soporte de PWA): en DevTools →
+- [X] T017 [P] Verificar FR-007 (degradación en navegadores sin soporte de PWA): en DevTools →
   Application → Service Workers, marcar "Bypass for network" (o usar un perfil con service
   workers deshabilitados) y confirmar que la app sigue cargando y funcionando como web app
   normal, sin errores en consola por el registro fallido del service worker.
