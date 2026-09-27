@@ -88,10 +88,18 @@ inicio" con ícono y nombre correctos.
 **Independent Test**: ver `quickstart.md` secciones "US1 — Instalabilidad (Android/Chrome)" y
 "US1 — Instalabilidad (iOS/Safari)".
 
-- [ ] T008 [US1] Verificar instalabilidad en DevTools → **Application → Manifest**: sin errores,
-  los 3 íconos renderizan, `start_url: /dashboard`, `display: standalone`, y la sección
-  *Installability* sin advertencias. Además debe aparecer el ícono de instalar en la barra de
-  direcciones.
+- [X] T008 [US1] Verificar instalabilidad en DevTools → **Application → Manifest** (sin errores,
+  los 3 íconos renderizan, `start_url: /dashboard`, `display: standalone`) y, como prueba
+  definitiva, que Chrome ofrezca instalar la app (ícono en la barra de direcciones o
+  "Instalar AhorrApp" en el menú ⋮).
+  > **Resultado (2026-09-27)**: verificado — Chrome ofrece instalar. La sección *Installability*
+  > que mencionaba la redacción original ya no existe en Chrome reciente; los problemas ahora
+  > salen como lista de errores/advertencias arriba del panel.
+  > Quedaron dos **advertencias** (no errores): "Richer PWA Install UI won't be available"
+  > por no declarar `screenshots` en el manifest. No bloquean la instalación — solo hacen que
+  > Chrome use el diálogo básico en vez del enriquecido con capturas. **Decisión del usuario:
+  > dejarlo así por ahora**; agregar `screenshots` (una `form_factor: "wide"` y otra sin ese
+  > campo) queda como mejora opcional, no la pide ningún FR de la spec.
   > **Corregido durante la implementación**: la redacción original decía "correr Lighthouse →
   > categoría PWA". Esa categoría **ya no existe**: se verificó contra un reporte real de
   > Lighthouse 13.4.1 sobre esta misma app y no trae ninguna auditoría de PWA
