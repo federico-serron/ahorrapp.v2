@@ -1,5 +1,31 @@
 <!--
-Sync Impact Report
+Sync Impact Report (v1.1.0 — 2026-10-05)
+Version change: 1.0.0 → 1.1.0 (MINOR: se expande materialmente una guía existente)
+Modified principles:
+  - III. Autenticación Segura por Cookies (NON-NEGOTIABLE): se agrega una excepción
+    acotada para clientes no-navegador (agentes de IA vía MCP), que pueden usar un
+    token de acceso personal opaco en `Authorization: Bearer` bajo cinco condiciones
+    acumulativas (no-JWT, almacenado solo hasheado, revocación inmediata cross-worker,
+    alcance sin administración de cuenta, aceptado solo en sus endpoints). Se aclara
+    que la excepción no relaja bcrypt para contraseñas ni permite tokens en
+    localStorage/sessionStorage ni en query strings.
+    Motivo: la feature 007 (specs/007-mcp-server/) es imposible sin esto — el
+    protocolo MCP exige Bearer en cada request y un agente no puede recibir una
+    cookie httpOnly. Conflicto detectado y escalado en specs/007-mcp-server/plan.md
+    (Constitution Check) y aprobado explícitamente por el usuario antes de
+    implementar, según la Regla de conflicto de Governance.
+Added sections: none
+Removed sections: none
+Templates requiring follow-up: ninguno. specs/007-mcp-server/plan.md ya refleja la
+  enmienda; su Complexity Tracking deja de ser una violación pendiente.
+Deferred TODOs: La condición 2 de la excepción (revocación inmediata sin estado en
+  memoria) deja constancia de que el `BLACKLIST` actual de app/blacklist.py NO la
+  cumple. Eso no afecta a 007 (que no usa JWT), pero sigue abierto para el logout de
+  la app web en specs/005-shared-jwt-blocklist/.
+
+--- Historial ---
+
+Sync Impact Report (v1.0.0)
 Version change: [TEMPLATE] → 1.0.0 (initial ratification)
 Modified principles: n/a (first concrete version; all placeholders replaced)
 Added sections:
@@ -47,8 +73,34 @@ JWT únicamente vía cookies httpOnly (`credentials: "include"` en frontend, nun
 texto plano ni logueadas. El identity del JWT SIEMPRE se castea con
 `int(get_jwt_identity())` antes de usarse. Los flags de cookie (`Secure`,
 `SameSite`, `CSRF_PROTECT`) deben reforzarse en producción respecto a desarrollo.
+
+**Excepción para clientes no-navegador (agregada en v1.1.0):** la autenticación por
+cookie aplica a clientes de navegador. Un cliente no-navegador — hoy, un agente de
+IA conectado vía MCP — puede autenticarse con un token de acceso personal opaco en
+el header `Authorization: Bearer`, siempre que se cumplan **las cinco** condiciones:
+1. El token NO es un JWT y se almacena **solo hasheado**, nunca en claro.
+2. Es revocable con efecto **inmediato en todas las instancias**, sin depender de
+   estado en memoria de un proceso (descarta el `BLACKLIST` actual).
+3. Su alcance **excluye** toda operación de administración de cuenta (cambiar
+   contraseña, actualizar perfil, listar usuarios).
+4. Se acepta **únicamente** en los endpoints destinados a esos clientes, sin
+   ampliar `JWT_TOKEN_LOCATION` ni alterar la autenticación del resto de la app.
+5. El secreto se muestra una sola vez al generarlo y no es recuperable después.
+
+Esta excepción NO habilita tokens en `localStorage`/`sessionStorage` ni en query
+strings, y NO relaja bcrypt para contraseñas de usuario: un token de alta entropía
+generado por el servidor no es una contraseña, y puede usar un hash rápido
+(SHA-256) porque el factor de trabajo no aporta seguridad ahí y además impediría
+el lookup indexado necesario para revocar en O(1).
+
 Rationale: ya establecido en CLAUDE.md; principio reforzado porque se detectó una
-violación real (`edit_user()` sin `int()`) que debe evitarse en código futuro.
+violación real (`edit_user()` sin `int()`) que debe evitarse en código futuro. La
+excepción se agregó porque un agente de IA no puede recibir ni enviar una cookie
+`httpOnly` y el protocolo MCP exige `Authorization: Bearer` en cada request: sin
+ella la feature 007 era imposible. Las cinco condiciones preservan el objetivo
+original del principio (que un secreto de sesión no sea robable desde el navegador
+ni sobreviva a su revocación) y de hecho dan una revocación más fuerte que la del
+JWT actual.
 
 ### IV. Manejo de Errores sin Fuga de Información
 Los endpoints solo capturan/lanzan excepciones tipadas de `app/exceptions.py`. Los
@@ -134,6 +186,10 @@ store.
   (`JWT_COOKIE_CSRF_PROTECT=True`).
 - La revocación de sesión (blacklist de JWT) debe estar activa y funcional en
   `logout`, no comentada/inerte.
+- Las credenciales de larga duración para clientes no-navegador (Principio III,
+  excepción) se guardan solo hasheadas, se muestran una única vez, llevan registro
+  de último uso, y su revocación se verifica contra almacenamiento persistido —
+  nunca contra un `set()` en memoria de proceso.
 - Toda integración externa nueva (pagos, webhooks, IA) debe tener timeout y manejar
   fallos de red sin crashear el request.
 - El manifest y el service worker de la PWA no deben exponer ni cachear tokens,
@@ -165,4 +221,4 @@ implementar y preguntar al usuario citando explícitamente el principio en
 conflicto (ej. "Principio II exige X, la feature propone Y — ¿cómo procedemos?").
 No se resuelve el conflicto unilateralmente.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-28 | **Last Amended**: 2026-08-28
+**Version**: 1.1.0 | **Ratified**: 2026-08-28 | **Last Amended**: 2026-10-05
