@@ -107,6 +107,44 @@ app web.
 3. **Given** una petición de eliminar una categoría, **When** el agente la ejecuta sin confirmación
    previa, **Then** el sistema la rechaza y exige confirmación explícita (FR-017).
 
+---
+
+### User Story 5 - Corregir y borrar transacciones desde el agente (Priority: P3)
+
+El usuario se da cuenta de que un gasto quedó mal cargado — monto equivocado, categoría errada, o
+directamente duplicado — y le pide al agente que lo corrija o lo elimine, sin abrir la app.
+
+**Why this priority**: es la contracara necesaria de US2. Si el agente puede registrar
+transacciones en lenguaje natural, va a equivocarse alguna vez, y el usuario necesita poder
+arreglarlo por el mismo canal. Es P3 porque la app web ya permite corregir: esto es conveniencia,
+no una capacidad que falte en el producto.
+
+**Independent Test**: desde un agente conectado, pedir que corrija el monto de una transacción y
+que elimine otra, verificando cada cambio en la app web, y comprobar que el borrado sin confirmar
+es rechazado sin borrar nada.
+
+**Acceptance Scenarios**:
+
+1. **Given** un agente conectado, **When** el usuario le pide corregir la descripción, el monto o
+   la categoría de una transacción, **Then** queda modificada y el cambio es visible en la app web,
+   respetando las mismas reglas que la edición desde la UI (monto positivo en el campo, signo según
+   ingreso/gasto).
+2. **Given** una transacción de **otro** usuario, **When** el agente intenta editarla o
+   eliminarla, **Then** la operación es rechazada como inexistente, sin revelar que existe.
+3. **Given** una petición de eliminar una transacción, **When** el agente la ejecuta sin
+   confirmación previa, **Then** el sistema la rechaza y exige confirmación explícita (FR-017), y
+   la transacción sigue existiendo.
+4. **Given** una instrucción como "borrá el gasto del super" que coincide con **varias**
+   transacciones, **When** el agente intenta resolverla, **Then** recibe las coincidencias y no se
+   elimina ninguna, hasta que el usuario precise cuál (FR-020, FR-022).
+5. **Given** una corrección (no un borrado), **When** el agente la ejecuta, **Then** **no** se le
+   exige confirmación de dos pasos: modificar es reversible, eliminar no.
+
+> Esta user story se agregó en la revisión del 2026-10-05, al detectarse que FR-014 y FR-022 no
+> estaban cubiertos por ninguna story y por lo tanto no tenían escenarios de aceptación ni test
+> independiente. Es relevante porque SC-007 se verifica sobre borrados, y US4 solo cubría
+> categorías.
+
 ### Edge Cases
 
 - **Aislamiento entre usuarios**: toda operación del agente queda atada al dueño de la credencial.
@@ -137,7 +175,8 @@ app web.
 **Acceso y seguridad**
 
 - **FR-001**: El sistema DEBE permitir a un usuario autenticado generar credenciales de acceso para
-  agentes, de larga duración, desde la propia app.
+  agentes, de larga duración, desde la propia app, hasta un **tope de credenciales activas por
+  usuario** (las revocadas no cuentan).
 - **FR-002**: El valor secreto de una credencial DEBE mostrarse **una única vez** al generarla, y no
   ser recuperable después.
 - **FR-003**: El usuario DEBE poder ver sus credenciales activas (sin el secreto) y **revocar**
@@ -155,6 +194,10 @@ app web.
 
 - **FR-008**: El agente DEBE poder descubrir qué operaciones ofrece la app y qué datos necesita cada
   una, sin documentación externa.
+- **FR-023**: El sistema DEBE ofrecer una forma de conectar la credencial que funcione también en
+  clientes de IA que **no permiten configurar encabezados HTTP a mano**, sin que el usuario tenga
+  que editar nada del servidor ni exponer el secreto en la URL. Es decir: la compatibilidad no
+  puede depender de que el cliente tenga un campo donde pegar un encabezado.
 - **FR-009**: El agente DEBE poder consultar las transacciones del usuario de forma paginada, junto
   con el resumen de totales (ingresos, gastos, balance).
 - **FR-010**: El agente DEBE poder registrar una transacción a partir de texto en lenguaje natural,
@@ -167,6 +210,14 @@ app web.
   las reglas vigentes (nombre máx. 30 caracteres, colores válidos, tope por usuario, sin
   duplicados).
 - **FR-014**: El agente DEBE poder editar y eliminar transacciones existentes del usuario.
+- **FR-022**: El agente DEBE poder **buscar** transacciones del usuario por texto de la descripción
+  y/o rango de fechas, para poder identificar sin ambigüedad a cuál se refiere una instrucción
+  antes de editarla o eliminarla. Sin esta capacidad, FR-020 no es realizable: el agente no tendría
+  forma de resolver "el gasto del super" en un registro concreto más que adivinando.
+
+> FR-022 se agregó después de la numeración original (revisión del 2026-10-05) y se ubica acá por
+> afinidad temática. No se renumeraron FR-015 a FR-021 para no invalidar las referencias ya escritas
+> en `plan.md`, `contracts/` y `tasks.md`.
 
 **Confirmación de operaciones irreversibles**
 
@@ -231,6 +282,18 @@ app web.
 - **Autenticación por tokens de acceso personales** (decisión del usuario): el agente envía una
   credencial de larga duración que el usuario genera y revoca desde la app. Se descartó reusar el
   JWT de 1 día (obligaría a renovar a diario) y OAuth 2.1 (mucho más trabajo del necesario hoy).
+- **Clientes soportados: los que corren en la máquina del usuario** (decisión del usuario,
+  2026-10-05). La credencial viaja en el encabezado `Authorization: Bearer`, que es exactamente lo
+  que manda el protocolo. Lo que varía entre clientes no es el protocolo sino **cómo obtienen el
+  token**, y eso parte el universo en dos:
+  - **Clientes locales** (CLI, IDE y escritorio): o permiten configurar el encabezado a mano, o se
+    los cubre con el modo de conexión de FR-023. **Quedan todos dentro de alcance.**
+  - **Clientes alojados** (conectores de ChatGPT, Claude.ai web y móvil): no pueden lanzar un
+    proceso local ni aceptar un token pegado. Solo se conectan vía **OAuth 2.1 con descubrimiento
+    RFC 9728**, que el protocolo exige para la vía conformante. Eso implica un authorization
+    server, PKCE y registro de clientes: es una feature aparte y **queda fuera de alcance de 007**.
+    Si más adelante se quiere, el camino corto es delegar el authorization server a un IdP externo
+    e implementar solo el metadata de RFC 9728 y la validación del token.
 - **La revocación no puede apoyarse en el blocklist en memoria actual**, que no funciona con los
   5 workers de gunicorn de producción. Esta feature necesita un mecanismo de revocación que
   funcione entre procesos — probablemente persistido. Esto se solapa con
