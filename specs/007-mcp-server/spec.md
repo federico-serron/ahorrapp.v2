@@ -1,0 +1,215 @@
+# Feature Specification: Servidor MCP para agentes de IA
+
+**Feature Branch**: `007-mcp-server`
+
+**Created**: 2026-10-05
+
+**Status**: Draft
+
+**Input**: User description: "Crea un MCP para nuestra app para que pueda ser usada por agentes de IA. Crea un endpoint en el backend '/mcp'"
+
+**Contexto**: AhorrApp hoy solo se usa desde su propia interfaz web/PWA. Esta feature la abre para que
+un agente de IA (Claude Desktop, un asistente propio, etc.) pueda consultarla y operarla en nombre
+de su dueño, sin pasar por la UI. Construye sobre el baseline (`specs/001-project-baseline/`) y la
+constitución; no reemplaza nada existente.
+
+## User Scenarios & Testing *(mandatory)*
+
+### User Story 1 - Conectar un agente a mis finanzas (Priority: P1)
+
+Un usuario de AhorrApp quiere que su asistente de IA acceda a sus finanzas. Genera una credencial
+desde la app, la pega en la configuración de su agente, y a partir de ahí el agente puede trabajar
+con sus datos — y solo con los suyos.
+
+**Why this priority**: sin esto no hay feature. Y es el punto donde se define la seguridad: una
+credencial mal diseñada expone datos financieros a terceros.
+
+**Independent Test**: generar una credencial, configurarla en un cliente de IA, y confirmar que el
+agente lista las herramientas disponibles y puede leer datos de esa cuenta.
+
+**Acceptance Scenarios**:
+
+1. **Given** un usuario autenticado en la app, **When** genera una credencial de acceso para
+   agentes, **Then** recibe un valor secreto que puede copiar, mostrado **una sola vez**.
+2. **Given** un agente configurado con una credencial válida, **When** se conecta, **Then** puede
+   descubrir qué operaciones ofrece la app y ejecutarlas sobre los datos de ese usuario.
+3. **Given** un agente con una credencial de otro usuario, **When** pide datos, **Then** solo ve
+   los datos del dueño de esa credencial — nunca los de otro.
+4. **Given** una credencial revocada por su dueño, **When** el agente intenta usarla, **Then** es
+   rechazada de inmediato.
+5. **Given** un agente sin credencial o con una inválida, **When** intenta conectarse, **Then** es
+   rechazado sin revelar si la credencial existe ni ningún detalle interno.
+
+---
+
+### User Story 2 - Registrar gastos hablando con el agente (Priority: P1)
+
+El usuario le dice a su agente "gasté 850 en el super" y la transacción queda registrada en su
+cuenta, con descripción, monto, categoría y signo correctos — igual que si la hubiera escrito en
+la app.
+
+**Why this priority**: es el caso de uso central de AhorrApp (entrada en lenguaje natural) llevado
+al lugar donde el usuario ya está conversando. Sin esto, el MCP es solo un visor.
+
+**Independent Test**: desde un agente conectado, pedir que registre un gasto y verificar en la app
+web que aparece correctamente.
+
+**Acceptance Scenarios**:
+
+1. **Given** un agente conectado, **When** el usuario le pide registrar un gasto en lenguaje
+   natural, **Then** la transacción queda guardada en su cuenta y es visible en la app web.
+2. **Given** una transacción registrada vía agente, **When** se la compara con una creada desde la
+   UI, **Then** sigue exactamente las mismas reglas (monto positivo en el campo, signo según
+   ingreso/gasto, categoría de las del usuario).
+3. **Given** el servicio de interpretación de lenguaje natural no disponible, **When** el agente
+   intenta registrar, **Then** recibe un error claro y **no** se guarda una transacción a medias.
+
+---
+
+### User Story 3 - Consultar y analizar sus finanzas (Priority: P2)
+
+El usuario le pregunta al agente "¿cuánto gasté este mes?" o "mostrame un gráfico de gastos por
+categoría", y el agente responde con datos reales de su cuenta.
+
+**Why this priority**: es el valor de consulta, y lo que habilita los gráficos. Depende de que US1
+funcione, pero no de US2.
+
+**Independent Test**: desde un agente conectado, pedir el resumen del mes y contrastar los números
+contra los que muestra el dashboard.
+
+**Acceptance Scenarios**:
+
+1. **Given** un agente conectado, **When** el usuario pide sus transacciones, **Then** las recibe
+   paginadas, con el mismo resumen de totales que muestra el dashboard.
+2. **Given** un agente conectado, **When** el usuario pide datos analíticos de un rango de fechas,
+   **Then** recibe los agregados por fecha y por categoría necesarios para construir un gráfico.
+3. **Given** esos datos analíticos, **When** el agente los usa, **Then** puede representar el
+   gráfico con sus propias capacidades, sin que la app le devuelva una imagen.
+
+---
+
+### User Story 4 - Administrar categorías desde el agente (Priority: P3)
+
+El usuario le pide al agente crear, renombrar o eliminar categorías, sin abrir la app.
+
+**Why this priority**: es conveniencia. Es lo último en valor y lo primero que se puede recortar si
+hiciera falta.
+
+**Independent Test**: crear, renombrar y eliminar una categoría desde el agente y verificar cada
+cambio en la app web.
+
+**Acceptance Scenarios**:
+
+1. **Given** un agente conectado, **When** el usuario pide crear una categoría, **Then** queda
+   creada respetando los límites vigentes (nombre, color y tope por usuario).
+2. **Given** una categoría existente, **When** el usuario pide renombrarla o cambiarle el color,
+   **Then** el cambio se refleja en la app.
+3. **Given** una categoría de **otro** usuario, **When** el agente intenta modificarla o
+   eliminarla, **Then** la operación es rechazada como inexistente.
+
+### Edge Cases
+
+- **Aislamiento entre usuarios**: toda operación del agente queda atada al dueño de la credencial.
+  Un agente nunca puede leer ni escribir datos de otra cuenta, ni siquiera indicando un
+  identificador ajeno.
+- **Credencial comprometida**: el usuario puede revocarla, y la revocación tiene efecto inmediato
+  en todas las instancias del backend. ⚠️ Hoy la revocación de sesiones **no es confiable con
+  múltiples workers** (ver `specs/005-shared-jwt-blocklist/`): esta feature no puede apoyarse en
+  ese mecanismo roto.
+- **Operaciones destructivas**: eliminar una transacción o una categoría es irreversible. El agente
+  puede equivocarse interpretando una instrucción ambigua.
+- **Errores hacia el agente**: los mensajes de error no deben filtrar detalles internos del sistema
+  (consistente con el Principio IV de la constitución).
+- **Costo de terceros**: registrar una transacción consume cuota del servicio de interpretación de
+  lenguaje natural. Un agente en bucle podría dispararla.
+- Una credencial **no** debe poder usarse para operaciones de cuenta sensibles (cambiar contraseña,
+  listar usuarios): su alcance es finanzas, no administración de la cuenta.
+
+## Requirements *(mandatory)*
+
+### Functional Requirements
+
+**Acceso y seguridad**
+
+- **FR-001**: El sistema DEBE permitir a un usuario autenticado generar credenciales de acceso para
+  agentes, de larga duración, desde la propia app.
+- **FR-002**: El valor secreto de una credencial DEBE mostrarse **una única vez** al generarla, y no
+  ser recuperable después.
+- **FR-003**: El usuario DEBE poder ver sus credenciales activas (sin el secreto) y **revocar**
+  cualquiera de ellas.
+- **FR-004**: Una credencial revocada DEBE dejar de funcionar de inmediato, en **todas** las
+  instancias del backend, sin depender de un estado en memoria de un proceso.
+- **FR-005**: Toda operación hecha con una credencial DEBE acotarse exclusivamente a los datos del
+  usuario dueño de esa credencial.
+- **FR-006**: Las credenciales NO DEBEN habilitar operaciones de administración de cuenta (cambiar
+  contraseña, actualizar perfil, listar usuarios).
+- **FR-007**: Los rechazos por credencial ausente, inválida o revocada DEBEN usar un mensaje
+  genérico, sin revelar cuál de los tres casos ocurrió ni detalles internos.
+
+**Capacidades expuestas al agente**
+
+- **FR-008**: El agente DEBE poder descubrir qué operaciones ofrece la app y qué datos necesita cada
+  una, sin documentación externa.
+- **FR-009**: El agente DEBE poder consultar las transacciones del usuario de forma paginada, junto
+  con el resumen de totales (ingresos, gastos, balance).
+- **FR-010**: El agente DEBE poder registrar una transacción a partir de texto en lenguaje natural,
+  con el mismo comportamiento que la app web.
+- **FR-011**: El agente DEBE poder obtener datos analíticos de un rango de fechas, agregados por
+  fecha y por categoría, suficientes para construir un gráfico.
+- **FR-012**: El sistema DEBE devolver esos datos como información estructurada; **no** debe generar
+  ni devolver imágenes de gráficos.
+- **FR-013**: El agente DEBE poder listar, crear, **modificar** y eliminar las categorías del
+  usuario, respetando las reglas vigentes (nombre máx. 30 caracteres, colores válidos, tope por
+  usuario, sin duplicados).
+- **FR-014**: El agente DEBE poder editar y eliminar transacciones existentes del usuario.
+
+**Consistencia con el sistema actual**
+
+- **FR-015**: Las operaciones del agente DEBEN reutilizar las mismas reglas de negocio que usa la
+  app web, de modo que un cambio de regla aplique a ambos caminos sin duplicar lógica.
+- **FR-016**: Esta feature NO DEBE alterar el comportamiento de la app web ni de sus endpoints
+  existentes.
+
+### Key Entities
+
+- **Credencial de acceso para agentes** (nueva): representa un permiso de larga duración otorgado
+  por un usuario a un agente. Atributos conceptuales: a qué usuario pertenece, un nombre que el
+  usuario le pone para reconocerla, cuándo se creó, cuándo se usó por última vez, y si está
+  revocada. **El secreto no se guarda en claro** — solo algo que permita verificarlo.
+- **User**, **Transaction**, **Category**: sin cambios de esquema.
+
+## Success Criteria *(mandatory)*
+
+### Measurable Outcomes
+
+- **SC-001**: Un usuario puede conectar un agente a su cuenta en menos de 5 minutos, partiendo de la
+  app y sin leer documentación técnica.
+- **SC-002**: El 100% de los intentos de acceder a datos de otro usuario son rechazados.
+- **SC-003**: El 100% de las credenciales revocadas dejan de funcionar de inmediato, incluso con
+  varias instancias del backend corriendo en paralelo.
+- **SC-004**: Una transacción registrada por un agente es indistinguible de una creada desde la app
+  web en todos sus campos.
+- **SC-005**: Los datos analíticos que recibe el agente coinciden con los que muestra el dashboard
+  para el mismo rango de fechas.
+- **SC-006**: Cero regresiones en la funcionalidad existente de la app web.
+
+## Assumptions
+
+- **Autenticación por tokens de acceso personales** (decisión del usuario): el agente envía una
+  credencial de larga duración que el usuario genera y revoca desde la app. Se descartó reusar el
+  JWT de 1 día (obligaría a renovar a diario) y OAuth 2.1 (mucho más trabajo del necesario hoy).
+- **La revocación no puede apoyarse en el blocklist en memoria actual**, que no funciona con los
+  5 workers de gunicorn de producción. Esta feature necesita un mecanismo de revocación que
+  funcione entre procesos — probablemente persistido. Esto se solapa con
+  `specs/005-shared-jwt-blocklist/`, que está pausada.
+- **"Generar gráficos" = devolver datos, no imágenes** (decisión del usuario): `analytics_service`
+  ya produce `by_date`, `by_category` y `summary`; el agente arma la visualización.
+- **Falta una capacidad en el backend**: hoy existen listar, crear y eliminar categorías, pero
+  **no modificar** — ni endpoint ni función de servicio. FR-013 exige agregar esa capacidad, así
+  que el alcance incluye crear la operación de actualización de categoría, no solo exponerla.
+- El agente opera siempre en nombre de **un** usuario. No hay escenario multi-usuario ni de
+  administrador en esta feature.
+- La interpretación de lenguaje natural sigue delegada al servicio externo ya integrado; esta
+  feature no cambia ese contrato.
+- Queda **fuera de alcance**: registrar/dar de baja usuarios, cambiar contraseñas, y cualquier
+  operación de administración de cuenta.
