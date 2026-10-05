@@ -106,7 +106,7 @@ inicio" con ícono y nombre correctos.
   > (`installable-manifest`, `maskable-icon`, `splash-screen`, etc. — cero coincidencias); solo
   > quedan performance, accessibility, best-practices y seo. El panel Application → Manifest es
   > la verificación confiable e independiente de la versión de Chrome.
-- [ ] T009 [US1] Validación manual en un dispositivo Android real (o emulado) y un iPhone real:
+- [X] T009 [US1] Validación manual en un dispositivo Android real (o emulado) y un iPhone real:
   confirmar que el ícono y nombre mostrados durante la instalación coinciden con los de
   `contracts/pwa-manifest-contract.md` (no el favicon genérico de Vite).
 
@@ -121,7 +121,7 @@ el color de tema correcto.
 
 **Independent Test**: ver `quickstart.md` sección "US2 — Pantalla completa".
 
-- [ ] T010 [US2] Instalar la app (resultado de US1) y abrirla desde el ícono del homescreen —
+- [X] T010 [US2] Instalar la app (resultado de US1) y abrirla desde el ícono del homescreen —
   confirmar visualmente que no hay barra de direcciones ni controles de navegador, y que la
   barra de estado del sistema usa el `theme_color` (`#030712`).
 

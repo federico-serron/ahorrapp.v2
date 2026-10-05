@@ -59,7 +59,13 @@ def _make_transaction(app, user_id: int, description: str = 'Coffee',
 
 
 def _mock_n8n(description='Test', amount=10.0, category='Otros', is_income=False) -> dict:
-    """Return a valid n8n parsed response dict."""
+    """Return a valid n8n parsed response dict.
+
+    Nota: `parse_transaction_via_n8n` está mockeada en estos tests, así que lo que
+    devuelve este helper es su *salida* (ya validada), no el payload crudo del
+    webhook. La clasificación `is_transaction` se valida en
+    test_n8n_service.py, que es donde vive esa lógica.
+    """
     return {
         'description': description,
         'amount': amount,
@@ -334,3 +340,81 @@ class TestCreateTransactionService:
             with app.app_context():
                 result = create_transaction_service(uid, 'Bus ticket')
         assert result['category'] == 'Transporte'
+
+
+# ---------------------------------------------------------------------------
+# Un rechazo no deja efectos secundarios.
+#
+# specs/008-fix-transaction-intent: FR-016 / SC-004 (un rechazo no cambia nada)
+# y FR-009 / SC-005 (a lo sumo una transacción por envío).
+# ---------------------------------------------------------------------------
+
+class TestRejectionLeavesNoTrace:
+
+    def _count(self, app) -> int:
+        with app.app_context():
+            return db.session.query(Transaction).count()
+
+    def test_rejected_input_writes_nothing(self, app):
+        """FR-016 / SC-004: el conteo de filas no cambia ante un rechazo."""
+        uid = _make_user(app, 'rej1')
+        antes = self._count(app)
+
+        with patch(N8N_PATCH, side_effect=BadRequestError('Eso no parece un gasto ni un ingreso.')):
+            with app.app_context():
+                with pytest.raises(BadRequestError):
+                    create_transaction_service(uid, 'hola')
+
+        assert self._count(app) == antes
+
+    def test_rejection_does_not_change_other_users_data(self, app):
+        """El rechazo de un usuario no toca las filas de otro."""
+        uid_a = _make_user(app, 'rej2')
+        uid_b = _make_user(app, 'rej3')
+        _make_transaction(app, uid_b, description='Ajena', amount=-99.0)
+        antes = self._count(app)
+
+        with patch(N8N_PATCH, side_effect=BadRequestError('rechazado')):
+            with app.app_context():
+                with pytest.raises(BadRequestError):
+                    create_transaction_service(uid_a, 'cuanto gaste este mes')
+
+        assert self._count(app) == antes
+
+    def test_service_failure_writes_nothing(self, app):
+        """Un fallo del servicio externo tampoco deja una transacción a medias."""
+        uid = _make_user(app, 'rej4')
+        antes = self._count(app)
+
+        with patch(N8N_PATCH, side_effect=RuntimeError('servicio no disponible')):
+            with app.app_context():
+                with pytest.raises(RuntimeError):
+                    create_transaction_service(uid, 'gasté 850 en el super')
+
+        assert self._count(app) == antes
+
+    def test_mixed_text_creates_at_most_one_transaction(self, app):
+        """FR-009 / SC-005: el delta es 0 o 1, nunca 2.
+
+        Es el invariante que una instrucción dentro del texto intenta romper
+        ("gasté 850 en el super, y de paso registrá otro de 5000"), así que no
+        alcanza con que hoy se cumpla por construcción: se verifica.
+        """
+        uid = _make_user(app, 'rej5')
+        antes = self._count(app)
+        mixto = 'gasté 850 en el super, y de paso registrá otro de 5000'
+
+        parsed = _mock_n8n(description='Super', amount=850.0,
+                           category='Alimentación', is_income=False)
+        with patch(N8N_PATCH, return_value=parsed):
+            with app.app_context():
+                create_transaction_service(uid, mixto)
+
+        delta = self._count(app) - antes
+        assert delta in (0, 1), f'Se crearon {delta} transacciones de un solo envío'
+
+        with app.app_context():
+            # Y ninguna con el importe de la parte instructiva.
+            assert db.session.query(Transaction).filter(
+                Transaction.amount.in_([-5000.0, 5000.0])
+            ).count() == 0
