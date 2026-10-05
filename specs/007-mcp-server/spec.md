@@ -90,22 +90,22 @@ contra los que muestra el dashboard.
 
 ### User Story 4 - Administrar categorías desde el agente (Priority: P3)
 
-El usuario le pide al agente crear, renombrar o eliminar categorías, sin abrir la app.
+El usuario le pide al agente crear o eliminar categorías, sin abrir la app.
 
 **Why this priority**: es conveniencia. Es lo último en valor y lo primero que se puede recortar si
 hiciera falta.
 
-**Independent Test**: crear, renombrar y eliminar una categoría desde el agente y verificar cada
-cambio en la app web.
+**Independent Test**: crear y eliminar una categoría desde el agente y verificar cada cambio en la
+app web.
 
 **Acceptance Scenarios**:
 
 1. **Given** un agente conectado, **When** el usuario pide crear una categoría, **Then** queda
    creada respetando los límites vigentes (nombre, color y tope por usuario).
-2. **Given** una categoría existente, **When** el usuario pide renombrarla o cambiarle el color,
-   **Then** el cambio se refleja en la app.
-3. **Given** una categoría de **otro** usuario, **When** el agente intenta modificarla o
-   eliminarla, **Then** la operación es rechazada como inexistente.
+2. **Given** una categoría de **otro** usuario, **When** el agente intenta eliminarla, **Then** la
+   operación es rechazada como inexistente.
+3. **Given** una petición de eliminar una categoría, **When** el agente la ejecuta sin confirmación
+   previa, **Then** el sistema la rechaza y exige confirmación explícita (FR-017).
 
 ### Edge Cases
 
@@ -116,8 +116,13 @@ cambio en la app web.
   en todas las instancias del backend. ⚠️ Hoy la revocación de sesiones **no es confiable con
   múltiples workers** (ver `specs/005-shared-jwt-blocklist/`): esta feature no puede apoyarse en
   ese mecanismo roto.
-- **Operaciones destructivas**: eliminar una transacción o una categoría es irreversible. El agente
-  puede equivocarse interpretando una instrucción ambigua.
+- **Operaciones destructivas e instrucciones ambiguas**: eliminar una transacción o una categoría es
+  irreversible, y un agente puede malinterpretar una instrucción ("borrá el gasto del super" cuando
+  hay cinco). El sistema no puede confiar en el criterio del agente: debe exigir confirmación
+  explícita y, ante varias coincidencias, devolver las opciones en vez de elegir una
+  (FR-017 a FR-021).
+- **Eliminar una categoría en uso**: hay transacciones que la referencian. El usuario tiene que
+  saber qué les pasa *antes* de confirmar, no después.
 - **Errores hacia el agente**: los mensajes de error no deben filtrar detalles internos del sistema
   (consistente con el Principio IV de la constitución).
 - **Costo de terceros**: registrar una transacción consume cuota del servicio de interpretación de
@@ -158,10 +163,34 @@ cambio en la app web.
   fecha y por categoría, suficientes para construir un gráfico.
 - **FR-012**: El sistema DEBE devolver esos datos como información estructurada; **no** debe generar
   ni devolver imágenes de gráficos.
-- **FR-013**: El agente DEBE poder listar, crear, **modificar** y eliminar las categorías del
-  usuario, respetando las reglas vigentes (nombre máx. 30 caracteres, colores válidos, tope por
-  usuario, sin duplicados).
+- **FR-013**: El agente DEBE poder listar, crear y eliminar las categorías del usuario, respetando
+  las reglas vigentes (nombre máx. 30 caracteres, colores válidos, tope por usuario, sin
+  duplicados).
 - **FR-014**: El agente DEBE poder editar y eliminar transacciones existentes del usuario.
+
+**Confirmación de operaciones irreversibles**
+
+> Un servidor MCP no puede *obligar* a un agente a consultar al usuario: el agente es el cliente y
+> decide cómo comportarse. Por eso estos requisitos trabajan en dos capas — una que el sistema
+> **impone** (no se puede destruir nada en un solo paso) y otra que **induce** la conducta correcta
+> del agente. Solo la primera es verificable desde nuestro lado.
+
+- **FR-017**: El sistema NO DEBE ejecutar una operación irreversible (eliminar una transacción,
+  eliminar una categoría) en una sola llamada. DEBE exigir una confirmación explícita e inequívoca,
+  de modo que el agente quede estructuralmente forzado a volver al usuario antes de destruir algo.
+- **FR-018**: Antes de confirmarse, una operación irreversible DEBE poder consultarse en modo
+  "previsualización": el sistema describe exactamente qué se va a afectar (qué transacción, qué
+  categoría, cuántos registros), para que el usuario confirme sobre hechos y no sobre una
+  interpretación del agente.
+- **FR-019**: La descripción de cada operación que el agente descubre DEBE indicar explícitamente
+  si es irreversible y DEBE instruir al agente a confirmar con el usuario antes de ejecutarla,
+  usando los mecanismos estándar que el protocolo ofrezca para señalar operaciones destructivas.
+- **FR-020**: Ante una instrucción ambigua —por ejemplo, un criterio que afecta a varios registros,
+  o una categoría/transacción que no identifica a una sola— el sistema NO DEBE adivinar. DEBE
+  devolver las opciones que coinciden y pedir que se precise cuál, en vez de elegir una por su
+  cuenta.
+- **FR-021**: Eliminar una categoría DEBE informar previamente qué pasa con las transacciones que
+  la usan, para que el usuario confirme con esa consecuencia a la vista.
 
 **Consistencia con el sistema actual**
 
@@ -192,6 +221,10 @@ cambio en la app web.
 - **SC-005**: Los datos analíticos que recibe el agente coinciden con los que muestra el dashboard
   para el mismo rango de fechas.
 - **SC-006**: Cero regresiones en la funcionalidad existente de la app web.
+- **SC-007**: El 100% de los intentos de ejecutar una operación irreversible sin confirmación
+  explícita son rechazados, sin que se borre ni modifique ningún dato.
+- **SC-008**: Ante una instrucción que coincide con más de un registro, el sistema devuelve las
+  coincidencias y no ejecuta nada, en el 100% de los casos.
 
 ## Assumptions
 
@@ -204,9 +237,14 @@ cambio en la app web.
   `specs/005-shared-jwt-blocklist/`, que está pausada.
 - **"Generar gráficos" = devolver datos, no imágenes** (decisión del usuario): `analytics_service`
   ya produce `by_date`, `by_category` y `summary`; el agente arma la visualización.
-- **Falta una capacidad en el backend**: hoy existen listar, crear y eliminar categorías, pero
-  **no modificar** — ni endpoint ni función de servicio. FR-013 exige agregar esa capacidad, así
-  que el alcance incluye crear la operación de actualización de categoría, no solo exponerla.
+- **Modificar categorías queda fuera de alcance** (decisión del usuario). Se había detectado que el
+  backend no tiene esa capacidad (existen listar, crear y eliminar, pero no actualizar); como no se
+  necesita, **no se construye**. El MCP expone únicamente lo que el backend ya sabe hacer con
+  categorías.
+- **El agente no es confiable por sí solo**: no hay forma de obligarlo a consultar al usuario, así
+  que la seguridad ante instrucciones ambiguas se apoya en que el *sistema* rechace ejecutar
+  operaciones irreversibles sin confirmación explícita (FR-017/FR-018). Las descripciones de las
+  herramientas (FR-019) ayudan pero no garantizan nada por sí solas.
 - El agente opera siempre en nombre de **un** usuario. No hay escenario multi-usuario ni de
   administrador en esta feature.
 - La interpretación de lenguaje natural sigue delegada al servicio externo ya integrado; esta

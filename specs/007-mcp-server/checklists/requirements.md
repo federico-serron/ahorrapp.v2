@@ -39,10 +39,18 @@ marcadores:
    para gráficos + edición/borrado de transacciones.
 3. **"Generar gráficos"** → devolver datos estructurados, no imágenes renderizadas.
 
-Dos hallazgos verificados contra el código que la spec incorpora:
+Revisión posterior del usuario (2026-10-05):
 
-- **Falta la operación de modificar categoría** en el backend (hay GET/POST/DELETE, no UPDATE).
-  FR-013 la exige, así que el alcance incluye crearla.
+4. **Confirmación obligatoria ante ambigüedad** (FR-017 a FR-021, SC-007, SC-008). Se escribió en
+   dos capas a propósito: lo que el sistema **impone** (nada irreversible en una sola llamada,
+   previsualización antes de confirmar, devolver coincidencias en vez de adivinar) y lo que
+   **induce** en el agente (descripciones y señalización de operaciones destructivas). Un servidor
+   MCP no puede obligar a un cliente a preguntar, así que un requisito redactado como "el agente
+   debe preguntar" no sería verificable; la capa impuesta sí lo es.
+5. **Modificar categorías salió del alcance**: no se necesita, así que no se construye.
+
+Un hallazgo verificado contra el código que la spec incorpora:
+
 - **La revocación de credenciales no puede usar el blocklist actual**: es un `set()` en memoria y
   producción corre 5 workers de gunicorn. Documentado en Assumptions y en los Edge Cases; se
   solapa con `specs/005-shared-jwt-blocklist/` (pausada). Es el riesgo técnico principal a resolver
